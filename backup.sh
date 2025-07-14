@@ -22,7 +22,7 @@ size() {
 restore() {
     FILE="$1"
     echo "Restoring $FILE..."
-    $QU raw $(cat .dfx/local/canister_ids.json | jq -r ".taggr.local") "stable_mem_write" --args-file "$FILE" | $QU send --yes --raw - > /dev/null
+    $QU raw $(cat .dfx/local/canister_ids.json | jq -r ".crumbeatr.local") "stable_mem_write" --args-file "$FILE" | $QU send --yes --raw - > /dev/null
 }
 
 if [ "$CMD" == "restore" ]; then
@@ -38,13 +38,13 @@ if [ "$CMD" == "restore" ]; then
         if [ "$(size $FILE)" == "18" ]; then break; fi
     done
     echo "Clearing buckets before restoring heap..."
-    dfx canister call taggr clear_buckets '("")' || 1
+    dfx canister call crumbeatr clear_buckets '("")' || 1
     echo "Restoring heap..."
-    dfx canister call taggr stable_to_heap
+    dfx canister call crumbeatr stable_to_heap
     echo "Clearing buckets after restoring heap..."
-    dfx canister call taggr clear_buckets '("")'
+    dfx canister call crumbeatr clear_buckets '("")'
     echo "Checking consistency..."
-    dfx canister call taggr check
+    dfx canister call crumbeatr check
     exit 0
 fi
 
@@ -55,7 +55,7 @@ fetch() {
 }
 
 git rev-parse HEAD > $DIR/commit.txt
-dfx canister --network ic call taggr backup
+dfx canister --network ic call crumbeatr backup
 
 PAGE=0
 while true; do

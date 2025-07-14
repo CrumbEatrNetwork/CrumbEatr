@@ -29,7 +29,7 @@ test.describe("Report and transfer to user", () => {
         await page.getByRole("button", { name: "CREATE USER" }).click();
         await page.getByPlaceholder("alphanumeric").fill("joe");
         await page.getByRole("button", { name: "SAVE" }).click();
-        exec("dfx canister call taggr make_stalwart '(\"joe\")'");
+        exec("dfx canister call crumbeatr make_stalwart '(\"joe\")'");
     });
 
     test("Create two invites", async () => {
@@ -139,7 +139,7 @@ test.describe("Report and transfer to user", () => {
         await expect(page.locator("div:has-text('REWARDS') > code")).toHaveText(
             "20",
         );
-        exec("dfx canister call taggr weekly_chores");
+        exec("dfx canister call crumbeatr weekly_chores");
         await page.waitForTimeout(1500);
     });
 

@@ -146,13 +146,13 @@ mod string {
 }
 
 pub const CONFIG: &Config = &Config {
-    name: "Taggr",
+    name: "CrumbEatr",
     domains: &[
-        "taggr.link",
-        "taggr.network",
-        "taggr.club",
-        "taggr.blog",
-        "taggr.wtf",
+        "crumbeatr.link",
+        "crumbeatr.network",
+        "crumbeatr.club",
+        "crumbeatr.blog",
+        "crumbeatr.wtf",
         "6qfxa-ryaaa-aaaai-qbhsq-cai.icp0.io",
         "6qfxa-ryaaa-aaaai-qbhsq-cai.ic0.app",
     ],
@@ -160,7 +160,7 @@ pub const CONFIG: &Config = &Config {
     staging: "e4i5g-biaaa-aaaao-ai7ja-cai.icp0.io",
 
     #[cfg(not(feature = "staging"))]
-    token_symbol: "TAGGR",
+    token_symbol: "CRUMB",
     #[cfg(feature = "staging")]
     token_symbol: "STAGG",
     token_decimals: 2,

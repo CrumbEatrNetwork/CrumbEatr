@@ -1,11 +1,11 @@
 {
     "canisters": {
-        "taggr": {
-            "candid": "src/backend/taggr.did",
-            "package": "taggr",
+        "crumbeatr": {
+            "candid": "src/backend/crumbeatr.did",
+            "package": "crumbeatr",
             "type": "custom",
-            "wasm": "target/wasm32-unknown-unknown/release/taggr.wasm.gz",
-            "build": "./build.sh taggr",
+            "wasm": "target/wasm32-unknown-unknown/release/crumbeatr.wasm.gz",
+            "build": "./build.sh crumbeatr",
             "metadata": [
                 {
                     "name": "candid:service",

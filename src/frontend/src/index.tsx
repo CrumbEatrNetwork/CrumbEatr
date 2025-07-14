@@ -370,7 +370,7 @@ const Footer = ({}) => (
             <span className="left_half_spaced right_half_spaced">&middot;</span>
             <a href={location.origin}>{location.host.toLowerCase()}</a>
             <span className="left_half_spaced right_half_spaced">&middot;</span>
-            <a href="https://github.com/TaggrNetwork/taggr">GitHub</a>
+            <a href="https://github.com/CrumbEatrNetwork/CrumbEatr">GitHub</a>
         </>
     </footer>
 );

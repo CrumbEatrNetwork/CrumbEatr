@@ -88,7 +88,7 @@ fn setup_from_snapshot(wasm: &Path, snapshot_dir: &Path) -> (PocketIc, CanisterI
     );
     pic.set_stable_memory(canister_id, stable_memory, BlobCompression::NoCompression);
 
-    // Now upgrade to Taggr code based on the stable memory.
+    // Now upgrade to CrumbEatr code based on the stable memory.
     pic.upgrade_canister(
         canister_id,
         wasm_binary,

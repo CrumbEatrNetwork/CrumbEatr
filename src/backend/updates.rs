@@ -121,7 +121,7 @@ fn prod_release() -> bool {
     true
 }
 
-/// Fetches the full neuron info of the TaggrDAO proving the neuron decentralization
+/// Fetches the full neuron info of the CrumbDAO proving the neuron decentralization
 /// and voting via hot-key capabilities.
 #[update]
 async fn get_neuron_info() -> Result<String, String> {
@@ -701,12 +701,12 @@ fn check_candid_interface_compatibility() {
 
     // check the public interface against the actual one
     let old_interface =
-        std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("taggr.did");
+        std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("crumbeatr.did");
 
     check_service_equal(
         "actual ledger candid interface",
         candid_parser::utils::CandidSource::Text(&new_interface),
-        "declared candid interface in taggr.did file",
+        "declared candid interface in crumbeatr.did file",
         candid_parser::utils::CandidSource::File(old_interface.as_path()),
     );
 }

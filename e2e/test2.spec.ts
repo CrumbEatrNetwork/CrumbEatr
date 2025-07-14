@@ -34,16 +34,16 @@ test.describe("Regular users flow", () => {
         await page.getByPlaceholder("alphanumeric").fill("alice");
         await page
             .getByPlaceholder("tell us what we should know about you")
-            .fill("I am a #Taggr fan");
+            .fill("I am a #CrumbEatr fan");
         await page.getByRole("button", { name: "SAVE" }).click();
-        await expect(page).toHaveTitle("TAGGR");
+        await expect(page).toHaveTitle("CRUMBEATR");
 
         await page.goto("/#/inbox");
         await expect(
             page.getByRole("heading", { name: "INBOX" }),
         ).toBeVisible();
         await expect(
-            page.getByText("Use #Taggr as your personal blog"),
+            page.getByText("Use #CrumbEatr as your personal blog"),
         ).toBeVisible();
 
         // Logout
@@ -67,7 +67,7 @@ test.describe("Regular users flow", () => {
             page.getByRole("heading", { name: "Alice" }),
         ).toBeVisible();
         await expect(
-            page.locator("p", { hasText: /I am a #Taggr fan/ }),
+            page.locator("p", { hasText: /I am a #CrumbEatr fan/ }),
         ).toBeVisible();
 
         // Create a post

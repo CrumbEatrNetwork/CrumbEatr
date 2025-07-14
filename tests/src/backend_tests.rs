@@ -129,7 +129,7 @@ fn journal(
 
 #[test]
 fn test_add_post() {
-    let (pic, backend) = setup("taggr");
+    let (pic, backend) = setup("crumbeatr");
 
     let user_id = create_test_user(&pic, backend, controller(), "test");
     if user_id.is_none() {
@@ -147,7 +147,7 @@ fn test_add_post() {
 
 #[test]
 fn test_upgrades() {
-    let (pic, backend) = setup("taggr");
+    let (pic, backend) = setup("crumbeatr");
 
     let user_id = create_test_user(&pic, backend, controller(), "test");
     if user_id.is_none() {
@@ -168,7 +168,7 @@ fn test_upgrades() {
 
     pic.upgrade_canister(
         backend,
-        get_wasm("taggr"),
+        get_wasm("crumbeatr"),
         controller().as_slice().to_vec(),
         Some(controller()),
     )
@@ -182,7 +182,7 @@ fn test_upgrades() {
 
     pic.upgrade_canister(
         backend,
-        get_wasm("taggr"),
+        get_wasm("crumbeatr"),
         controller().as_slice().to_vec(),
         Some(controller()),
     )
@@ -205,7 +205,7 @@ fn test_upgrades() {
 #[test]
 fn test_upgrade_from_snapshot() {
     let snapshot = Path::new("./snapshot");
-    let old_wasm = Path::new("./snapshot/taggr.wasm.gz");
+    let old_wasm = Path::new("./snapshot/crumbeatr.wasm.gz");
     if !snapshot.exists() {
         eprintln!("Skipping test_upgrade_from_snapshot because there is no snapshot");
         return;
@@ -222,7 +222,7 @@ fn test_upgrade_from_snapshot() {
 
     pic.upgrade_canister(
         backend,
-        get_wasm("taggr"),
+        get_wasm("crumbeatr"),
         controller().as_slice().to_vec(),
         Some(controller()),
     )

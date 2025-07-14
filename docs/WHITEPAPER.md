@@ -170,7 +170,7 @@ It autonomously creates new storage canisters when space runs out.
 $name tops up canisters with low credits using ICP from the Treasury.
 The [dashboard](/#/dashboard) provides information on system status and past events.
 
-## The Taggr Network Neuron
+## The CrumbEatr Network Neuron
 
 $name DAO votes on NNS proposals with neuron [$neuron_id](http://dashboard.internetcomputer.org/neuron/$neuron_id) and doesn't follow anyone.
 
@@ -215,7 +215,7 @@ The result of `add_post` contains the new post's ID or an error message.
 
 ## Code and Bug Bounty
 
-$name's [code](https://github.com/TaggrNetwork/taggr) is open source, under GPL license.
+$name's [code](https://github.com/CrumbEatrNetwork/CrumbEatr) is open source, under GPL license.
 
 $name's DAO has a bug bounty program with classifications and rewards in `$token_symbol`.
 

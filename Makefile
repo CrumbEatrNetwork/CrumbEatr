@@ -4,24 +4,24 @@ start:
 staging_deploy:
 	NODE_ENV=production DFX_NETWORK=staging make fe
 	FEATURES=staging dfx build
-	FEATURES=staging dfx --identity prod deploy --network staging taggr
+	FEATURES=staging dfx --identity prod deploy --network staging crumbeatr
 
 local_deploy:
 	FEATURES=dev dfx deploy
 
 dev_build:
 	FEATURES=dev ./build.sh bucket
-	FEATURES=dev ./build.sh taggr
+	FEATURES=dev ./build.sh crumbeatr
 	FEATURES=dev dfx build
 
 local_reinstall:
 	make fe
-	FEATURES=dev dfx deploy --mode=reinstall taggr -y
+	FEATURES=dev dfx deploy --mode=reinstall crumbeatr -y
 
 build:
 	NODE_ENV=production make fe
 	./build.sh bucket
-	./build.sh taggr
+	./build.sh crumbeatr
 
 test:
 	make e2e_build
@@ -39,7 +39,7 @@ fe:
 e2e_build:
 	NODE_ENV=production DFX_NETWORK=local npm run build
 	FEATURES=dev ./build.sh bucket
-	FEATURES=dev ./build.sh taggr
+	FEATURES=dev ./build.sh crumbeatr
 
 e2e_test:
 	npm run install:e2e
@@ -50,10 +50,10 @@ e2e_test:
 	dfx stop
 
 release:
-	docker build -t taggr .
-	docker run --rm -v $(shell pwd)/release-artifacts:/target/wasm32-unknown-unknown/release taggr
+	docker build -t crumbeatr .
+	docker run --rm -v $(shell pwd)/release-artifacts:/target/wasm32-unknown-unknown/release crumbeatr
 	make hashes
 
 hashes:
 	git rev-parse HEAD
-	shasum -a 256 ./release-artifacts/taggr.wasm.gz  | cut -d ' ' -f 1
+	shasum -a 256 ./release-artifacts/crumbeatr.wasm.gz  | cut -d ' ' -f 1

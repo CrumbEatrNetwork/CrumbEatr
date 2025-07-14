@@ -3650,7 +3650,7 @@ pub(crate) mod tests {
             user1.change_credits(500, CreditsDelta::Minus, "").unwrap();
             assert_eq!(user1.credits(), 500);
 
-            let name = "TAGGRDAO".to_string();
+            let name = "CRUMBDAO".to_string();
             let controllers: BTreeSet<_> = vec![_u0].into_iter().collect();
 
             // simple creation and description change edge cases
@@ -3902,7 +3902,7 @@ pub(crate) mod tests {
                 .get(&_u1)
                 .unwrap()
                 .realms
-                .contains(&"TAGGRDAO".to_string()));
+                .contains(&"CRUMBDAO".to_string()));
             (p1, realm_name)
         });
 
@@ -3913,7 +3913,7 @@ pub(crate) mod tests {
                 "changed".to_string(),
                 vec![],
                 "".to_string(),
-                Some("TAGGRDAO_X".to_string()),
+                Some("CRUMBDAO_X".to_string()),
                 p1,
                 time(),
             )
@@ -3923,7 +3923,7 @@ pub(crate) mod tests {
 
         read(|state| {
             assert_eq!(Post::get(state, &6).unwrap().realm, Some(realm_name));
-            assert_eq!(state.realms.get("TAGGRDAO").unwrap().posts.len(), 1);
+            assert_eq!(state.realms.get("CRUMBDAO").unwrap().posts.len(), 1);
         });
         assert_eq!(
             Post::edit(
@@ -3931,7 +3931,7 @@ pub(crate) mod tests {
                 "changed".to_string(),
                 vec![],
                 "".to_string(),
-                Some("TAGGRDAO".to_string()),
+                Some("CRUMBDAO".to_string()),
                 p1,
                 time(),
             )
@@ -3941,10 +3941,10 @@ pub(crate) mod tests {
 
         read(|state| {
             assert_eq!(state.realms.get("NEW_REALM").unwrap().posts.len(), 0);
-            assert_eq!(state.realms.get("TAGGRDAO").unwrap().posts.len(), 2);
+            assert_eq!(state.realms.get("CRUMBDAO").unwrap().posts.len(), 2);
             assert_eq!(
                 Post::get(state, &6).unwrap().realm,
-                Some("TAGGRDAO".to_string())
+                Some("CRUMBDAO".to_string())
             );
         });
     }

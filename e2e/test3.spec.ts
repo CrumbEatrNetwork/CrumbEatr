@@ -34,7 +34,7 @@ test.describe("Regular users flow, part two", () => {
             .getByPlaceholder("tell us what we should know about you")
             .fill("I am John");
         await page.getByRole("button", { name: "SAVE" }).click();
-        await expect(page).toHaveTitle("TAGGR");
+        await expect(page).toHaveTitle("CRUMBEATR");
     });
 
     test("Create a post with poll", async () => {

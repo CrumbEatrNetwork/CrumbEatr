@@ -27,16 +27,16 @@ Make sure to follow the steps outlined in the rest of this file before using the
 
 ## First Time Setup
 
-Clone the Taggr repo:
+Clone the CrumbEatr repo:
 
 ```shell
-git clone git@github.com:TaggrNetwork/taggr.git
+git clone git@github.com:CrumbEatrNetwork/CrumbEatr.git
 ```
 
-Change your directory to the newly cloned Taggr repo:
+Change your directory to the newly cloned CrumbEatr repo:
 
 ```shell
-cd taggr
+cd CrumbEatr
 ```
 
 Install DFX
@@ -45,7 +45,7 @@ Install DFX
 DFX_VERSION=$(cat dfx.json | jq -r .dfx) sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
 ```
 
-The remaining steps are only necessary for deploying NNS canisters locally. This makes it easier to test new account creation with Internet Identity, to make ICP transfers to those accounts or to run Taggr e2e tests without a Docker container. Alternatively, you can [create a backup](#creating-and-restoring-backups) and then refer to the [command reference](#command-reference) to build and deploy.
+The remaining steps are only necessary for deploying NNS canisters locally. This makes it easier to test new account creation with Internet Identity, to make ICP transfers to those accounts or to run CrumbEatr e2e tests without a Docker container. Alternatively, you can [create a backup](#creating-and-restoring-backups) and then refer to the [command reference](#command-reference) to build and deploy.
 
 Create or edit `~/.config/dfx/networks.json`, and add the following, note that `dfx install` requires port `8080` to work:
 
@@ -73,7 +73,7 @@ Start DFX with a clean environment:
 dfx start --clean --background
 ```
 
-Install Taggr canister:
+Install CrumbEatr canister:
 
 ```shell
 npm ci
@@ -89,7 +89,7 @@ dfx extension install nns
 dfx nns install
 ```
 
-Now you are ready to create a new Taggr account with Internet Identity locally. If you also want to make ICP transfers to this account then continue with the remaining steps, the remaining steps are not necessary for running e2e tests.
+Now you are ready to create a new CrumbEatr account with Internet Identity locally. If you also want to make ICP transfers to this account then continue with the remaining steps, the remaining steps are not necessary for running e2e tests.
 
 Set up the private key for the local minting account:
 
@@ -115,7 +115,7 @@ Change to the new identity in DFX:
 dfx identity use local-minter
 ```
 
-At this point, you can refer to the [command reference](#command-reference) to deploy and run Taggr, create a new account and grab your account ID. Then you can transfer ICP to that account with this command:
+At this point, you can refer to the [command reference](#command-reference) to deploy and run CrumbEatr, create a new account and grab your account ID. Then you can transfer ICP to that account with this command:
 
 ```shell
 dfx ledger transfer --memo 1000 --amount 10 ${accountId}

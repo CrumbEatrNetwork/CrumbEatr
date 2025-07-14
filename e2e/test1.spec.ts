@@ -34,7 +34,7 @@ test.describe("Upgrades & token transfer flow", () => {
         await page.getByRole("button", { name: "CREATE USER" }).click();
         await page.getByPlaceholder("alphanumeric").fill("eve");
         await page.getByRole("button", { name: "SAVE" }).click();
-        exec("dfx canister call taggr make_stalwart '(\"eve\")'");
+        exec("dfx canister call crumbeatr make_stalwart '(\"eve\")'");
     });
 
     test("Create a post and an invite", async () => {
@@ -73,7 +73,7 @@ test.describe("Upgrades & token transfer flow", () => {
     });
 
     test("Trigger minting", async () => {
-        exec("dfx canister call taggr weekly_chores");
+        exec("dfx canister call crumbeatr weekly_chores");
         await page.waitForTimeout(1000);
         await page.reload();
     });
@@ -115,7 +115,7 @@ test.describe("Upgrades & token transfer flow", () => {
             page.getByRole("heading", { name: "TRANSACTIONS OF 6QFXA" }),
         ).toBeVisible();
         await expect(
-            page.getByRole("heading", { name: "BALANCE: 5.00 TAGGR" }),
+            page.getByRole("heading", { name: "BALANCE: 5.00 CRUMB" }),
         ).toBeVisible();
     });
 
@@ -138,7 +138,7 @@ test.describe("Upgrades & token transfer flow", () => {
             "target",
             "wasm32-unknown-unknown",
             "release",
-            "taggr.wasm.gz",
+            "crumbeatr.wasm.gz",
         );
 
         const [fileChooser] = await Promise.all([
@@ -178,7 +178,7 @@ test.describe("Upgrades & token transfer flow", () => {
             page.getByRole("heading", { name: "Supporters" }),
         ).toBeVisible();
 
-        exec("dfx canister call taggr chores");
+        exec("dfx canister call crumbeatr chores");
     });
 
     test("Verify recovery upgrade", async () => {
@@ -210,7 +210,7 @@ test.describe("Upgrades & token transfer flow", () => {
             "target",
             "wasm32-unknown-unknown",
             "release",
-            "taggr.wasm.gz",
+            "crumbeatr.wasm.gz",
         );
 
         const [fileChooser] = await Promise.all([
@@ -233,7 +233,7 @@ test.describe("Upgrades & token transfer flow", () => {
         await page.getByRole("button", { name: "ACCEPT" }).click();
         await expect(page.getByText(/STATUS.*EXECUTED/)).toBeVisible();
 
-        exec("dfx canister call taggr chores");
+        exec("dfx canister call crumbeatr chores");
         await page.locator("#logo").click();
     });
 
