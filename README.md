@@ -13,7 +13,7 @@ All modifications and new features in CrumbEatr are also released under the GNU 
 
 ---
 
-*If you contributed to Taggr and would like to be recognized in a special way, please open an issue or pull request!*
+_If you contributed to Taggr and would like to be recognized in a special way, please open an issue or pull request!_
 
 ---
 

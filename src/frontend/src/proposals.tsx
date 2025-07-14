@@ -19,7 +19,8 @@ import { HourGlass } from "./icons";
 import { PostFeed } from "./post_feed";
 import { PostId, Proposal } from "./types";
 
-const REPO_RELEASE = "https://github.com/CrumbEatrNetwork/CrumbEatr/releases/latest";
+const REPO_RELEASE =
+    "https://github.com/CrumbEatrNetwork/CrumbEatr/releases/latest";
 const REPO_COMMIT = "https://github.com/CrumbEatrNetwork/CrumbEatr/commit";
 
 enum ProposalType {

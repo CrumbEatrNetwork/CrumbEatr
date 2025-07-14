@@ -320,6 +320,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "248e3bacc7dc6baa3b21e405ee045c3047101a49145e7e9eca583ab4c2ca5345"
 
 [[package]]
+name = "crumbeatr"
+version = "0.1.0"
+dependencies = [
+ "actix-rt",
+ "base64 0.21.5",
+ "candid",
+ "candid_parser",
+ "hex",
+ "ic-cdk",
+ "ic-cdk-macros",
+ "ic-cdk-timers",
+ "ic-certified-map",
+ "ic-ledger-types",
+ "serde",
+ "serde_bytes",
+ "serde_cbor",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "crunchy"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1636,27 +1657,6 @@ checksum = "a75fb188eb626b924683e3b95e3a48e63551fcfb51949de2f06a9d91dbee93c9"
 dependencies = [
  "core-foundation-sys",
  "libc",
-]
-
-[[package]]
-name = "crumbeatr"
-version = "0.1.0"
-dependencies = [
- "actix-rt",
- "base64 0.21.5",
- "candid",
- "candid_parser",
- "hex",
- "ic-cdk",
- "ic-cdk-macros",
- "ic-cdk-timers",
- "ic-certified-map",
- "ic-ledger-types",
- "serde",
- "serde_bytes",
- "serde_cbor",
- "serde_json",
- "sha2",
 ]
 
 [[package]]
