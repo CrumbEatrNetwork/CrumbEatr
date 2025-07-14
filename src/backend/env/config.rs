@@ -21,6 +21,7 @@ pub struct Config {
     pub credit_transaction_fee: u64,
     pub token_decimals: u8,
     pub token_symbol: &'static str,
+    pub token_name: &'static str,
     pub maximum_supply: Token,
 
     pub max_age_hot_post_days: u64,
@@ -163,6 +164,7 @@ pub const CONFIG: &Config = &Config {
     token_symbol: "CRUMB",
     #[cfg(feature = "staging")]
     token_symbol: "STAGG",
+    token_name: "Crumb",
     token_decimals: 2,
     transaction_fee: 25,
     credit_transaction_fee: 1,

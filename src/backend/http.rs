@@ -121,7 +121,7 @@ fn http_request(req: HttpRequest) -> HttpResponse {
                 serde_json::to_vec(&Metadata {
                     decimals: CONFIG.token_decimals,
                     symbol: CONFIG.token_symbol,
-                    token_name: CONFIG.name,
+                    token_name: CONFIG.token_name,
                     fee: CONFIG.transaction_fee,
                     logo: &format!(
                         "data:image/png;base64,{}",
