@@ -522,7 +522,11 @@ fn recovery_state() {
 
 #[export_name = "canister_query stats"]
 fn stats() {
-    read(|state| reply(state.stats(api::time())));
+    read(|state| {
+        // Ensure stats are safe to call even during initialization
+        let current_time = api::time();
+        reply(state.stats(current_time))
+    });
 }
 
 #[export_name = "canister_query search"]

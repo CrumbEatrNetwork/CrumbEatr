@@ -314,6 +314,7 @@ declare global {
                 maximum_supply: number;
                 proposal_approval_threshold: number;
                 name: string;
+                token_name: string;
                 proposal_rejection_penalty: number;
                 voting_power_activity_weeks: number;
                 trusted_user_min_karma: number;

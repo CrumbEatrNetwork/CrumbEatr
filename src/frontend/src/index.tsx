@@ -252,6 +252,13 @@ const reloadCache = async () => {
             "realms_data",
         ),
     ]);
+    
+    // Ensure stats is never null - provide fallback with last_upgrade = 0
+    const safeStats = stats || { last_upgrade: 0 };
+    
+    // Ensure config is never null - provide fallback with name field
+    const safeConfig = config || { name: "CrumbEatr" };
+    
     window.backendCache = {
         users: (users || []).reduce((acc, [id, name]) => {
             acc[id] = name;
@@ -263,8 +270,8 @@ const reloadCache = async () => {
         }, {} as any),
         recent_tags: (recent_tags || []).map(([tag, _]) => tag),
         realms_data: realms || {},
-        stats,
-        config,
+        stats: safeStats,
+        config: safeConfig,
     };
     window.resetUI = () => {
         window.uiInitialized = false;
@@ -272,11 +279,11 @@ const reloadCache = async () => {
         frames.forEach((frame) => frame.remove());
     };
     if (window.lastSavedUpgrade == 0) {
-        window.lastSavedUpgrade = window.backendCache.stats.last_upgrade;
+        window.lastSavedUpgrade = window.backendCache.stats?.last_upgrade || 0;
     } else if (
-        window.lastSavedUpgrade != window.backendCache.stats.last_upgrade
+        window.lastSavedUpgrade != (window.backendCache.stats?.last_upgrade || 0)
     ) {
-        window.lastSavedUpgrade = window.backendCache.stats.last_upgrade;
+        window.lastSavedUpgrade = window.backendCache.stats?.last_upgrade || 0;
         const banner = document.getElementById("upgrade_banner") as HTMLElement;
         banner.innerHTML = "New app version is available! Click me to reload.";
         banner.onclick = () => {
