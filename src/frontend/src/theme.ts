@@ -23,34 +23,34 @@ export const getTheme = (name: string) => themes[name];
 
 const themes: { [name: string]: Theme } = {
     black: {
-        text: "#d0d0d0",
+        text: "#EDF0EF",
         background: "#060606",
         code: "White",
         clickable: "#4CB381",
-        accent: "Gold",
+        accent: "#75FBA5",
         light_factor: 5,
         dark_factor: 5,
     },
     calm: {
-        text: "#e0e0c8",
+        text: "#EDF0EF",
         background: "#343541",
         code: "White",
         clickable: "#30d5c8",
-        accent: "Gold",
+        accent: "#75FBA5",
     },
     classic: {
-        text: "#e0e0c8",
+        text: "#EDF0EF",
         background: "#1c3239",
         code: "White",
         clickable: "#30d5c8",
-        accent: "#FFc700",
+        accent: "#75FBA5",
     },
     dark: {
-        text: "#e0e0cf",
+        text: "#EDF0EF",
         background: "#1e1e23",
         code: "White",
         clickable: "#30d5c8",
-        accent: "Gold",
+        accent: "#75FBA5",
     },
     light: {
         text: "#101010",
@@ -60,11 +60,11 @@ const themes: { [name: string]: Theme } = {
         accent: "MediumSeaGreen",
     },
     midnight: {
-        text: "#e0e0cf",
+        text: "#EDF0EF",
         background: "#111d2b",
         code: "White",
         clickable: "#7fffd4",
-        accent: "#FFd700",
+        accent: "#75FBA5",
     },
 };
 
