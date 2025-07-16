@@ -418,6 +418,10 @@ path {
     fill: $text;
 }
 
+#logo path {
+    fill: $text !important;
+}
+
 .vcentered {
     display: flex;
     align-items: center;
