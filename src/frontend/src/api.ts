@@ -98,7 +98,11 @@ export const ApiGenerator = (
 ): Backend => {
     let defaultPrincipal = Principal.fromText(defaultCanisterId);
     const options: HttpAgentOptions = { identity };
-    if (mainnetMode) options.host = `https://${CANISTER_ID}.ic0.app`;
+    if (mainnetMode) {
+        options.host = `https://${CANISTER_ID}.ic0.app`;
+    } else {
+        options.host = "http://localhost:4943";
+    }
     const agent = new HttpAgent(options);
     if (!mainnetMode)
         agent.fetchRootKey().catch((err) => {

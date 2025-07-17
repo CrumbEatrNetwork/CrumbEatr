@@ -256,8 +256,8 @@ const reloadCache = async () => {
     // Ensure stats is never null - provide fallback with last_upgrade = 0
     const safeStats = stats || { last_upgrade: 0 };
     
-    // Ensure config is never null - provide fallback with name field
-    const safeConfig = config || { name: "CrumbEatr" };
+    // Ensure config is never null - provide fallback with name and logo field
+    const safeConfig = config || { name: "CrumbEatr", logo: "" };
     
     window.backendCache = {
         users: (users || []).reduce((acc, [id, name]) => {
