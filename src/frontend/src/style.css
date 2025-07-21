@@ -516,12 +516,30 @@ hr {
 .selected {
     background: $frame;
     border-radius: 10px;
+    transform: skew(-10deg);
 }
 
 .unselected {
     background: none;
     border: 2px solid #000000;
-    transform: skew(-10deg);
+}
+
+/* PERSONAL and TRENDING buttons should always be slanted */
+button[data-testid="tab-PERSONAL"],
+button[data-testid="tab-TRENDING"] {
+    transform: skew(-10deg) !important;
+}
+
+/* Override for PERSONAL and TRENDING buttons - force skew even when unselected */
+button[data-testid="tab-PERSONAL"].unselected,
+button[data-testid="tab-TRENDING"].unselected {
+    transform: skew(-10deg) !important;
+}
+
+/* Override for PERSONAL and TRENDING buttons - keep skew when active */
+button[data-testid="tab-PERSONAL"].active,
+button[data-testid="tab-TRENDING"].active {
+    transform: skew(-10deg) !important;
 }
 
 .reaction_button {
