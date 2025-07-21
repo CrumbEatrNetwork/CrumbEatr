@@ -254,7 +254,8 @@ article.overflowing::after {
 .post_extension,
 .feed_item {
     border-radius: 10px;
-    border: 1px solid $frame;
+    border: 2px solid #000000;
+    background: $dark_background;
 }
 
 .active_element {
@@ -323,7 +324,7 @@ article.overflowing::after {
 button {
     cursor: pointer;
     color: $text;
-    background: $frame;
+    background: $background;
     font-weight: bold;
     border: 2px solid #000000;
     border-radius: 5px;
@@ -526,6 +527,7 @@ hr {
 .reaction_button {
     cursor: pointer;
     color: $text;
+    background: $background;
     border-radius: 5px;
     font-weight: normal;
     padding: 0.75em;

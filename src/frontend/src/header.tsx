@@ -130,7 +130,6 @@ export const Header = ({
                                 <IconToggleButton
                                     title="Inbox"
                                     pressed={location.href.includes("inbox")}
-                                    classNameArg="right_half_spaced"
                                     onClick={() => (location.href = "#/inbox")}
                                     icon={
                                         <>
@@ -147,8 +146,19 @@ export const Header = ({
                                 />
                             )}
                             {user && (
+                                <BurgerButton
+                                    pressed={showLinks}
+                                    onClick={() => {
+                                        toggleRealms(false);
+                                        toggleUserSection(false);
+                                        toggleLinks(!showLinks);
+                                    }}
+                                    testId="toggle-links"
+                                />
+                            )}
+                            {user && (
                                 <button
-                                    className={"active"}
+                                    className={"active left_half_spaced"}
                                     onClick={() => (location.href = "#/new")}
                                 >
                                     POST
@@ -163,17 +173,6 @@ export const Header = ({
                                     currState={() => showLogins}
                                     onLabel="CLOSE"
                                     offLabel="CONNECT"
-                                />
-                            )}
-                            {user && (
-                                <BurgerButton
-                                    pressed={showLinks}
-                                    onClick={() => {
-                                        toggleRealms(false);
-                                        toggleUserSection(false);
-                                        toggleLinks(!showLinks);
-                                    }}
-                                    testId="toggle-links"
                                 />
                             )}
                         </>
