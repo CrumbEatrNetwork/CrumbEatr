@@ -738,6 +738,7 @@ export const Realms = () => {
             />
             <div className="spaced row_container bottom_spaced">
                 <input
+                    id="search_field"
                     className="right_half_spaced max_width_col"
                     type="search"
                     placeholder={`Search realms...`}

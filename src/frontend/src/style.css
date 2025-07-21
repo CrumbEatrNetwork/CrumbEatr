@@ -143,8 +143,16 @@ select {
     color: $text;
     border-radius: 5px;
     background: $dark_background;
-    border: none;
+    border: 2px solid #000000;
     font-size: large;
+}
+
+#search_field:focus:placeholder-shown {
+    border-color: $frame;
+}
+
+#search_field:focus:not(:placeholder-shown) {
+    border-color: $text;
 }
 
 .grid_column {
