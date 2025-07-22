@@ -186,18 +186,27 @@ pub async fn account_balance(account: AccountIdentifier) -> Result<Tokens, Strin
 }
 
 pub async fn get_xdr_in_e8s() -> Result<u64, String> {
-    let (IcpXdrConversionRateCertifiedResponse {
-        data: IcpXdrConversionRate {
-            xdr_permyriad_per_icp,
-        },
-    },) = call_canister(
-        MAINNET_CYCLES_MINTING_CANISTER_ID,
-        "get_icp_xdr_conversion_rate",
-        (),
-    )
-    .await
-    .map_err(|err| format!("couldn't get ICP/XDR ratio: {:?}", err))?;
-    Ok((100_000_000.0 / xdr_permyriad_per_icp as f64) as u64 * 10_000)
+    #[cfg(feature = "dev")]
+    {
+        // Return a hardcoded XDR rate for local development
+        // This matches the rate used in tests: 3095_0000 e8s per XDR
+        Ok(3095_0000)
+    }
+    #[cfg(not(feature = "dev"))]
+    {
+        let (IcpXdrConversionRateCertifiedResponse {
+            data: IcpXdrConversionRate {
+                xdr_permyriad_per_icp,
+            },
+        },) = call_canister(
+            MAINNET_CYCLES_MINTING_CANISTER_ID,
+            "get_icp_xdr_conversion_rate",
+            (),
+        )
+        .await
+        .map_err(|err| format!("couldn't get ICP/XDR ratio: {:?}", err))?;
+        Ok((100_000_000.0 / xdr_permyriad_per_icp as f64) as u64 * 10_000)
+    }
 }
 
 pub async fn topup_with_icp(canister_id: &Principal, xdrs: u64) -> Result<u128, String> {
