@@ -102,6 +102,25 @@ export const Header = ({
                 <div className="vcentered max_width_col flex_ended">
                     {!subtle && (
                         <>
+                            {user && (
+                                <IconToggleButton
+                                    title="Inbox"
+                                    pressed={location.href.includes("inbox")}
+                                    onClick={() => (location.href = "#/inbox")}
+                                    icon={
+                                        <>
+                                            <Bell
+                                                classNameArg={
+                                                    messages > 0
+                                                        ? "accent right_half_spaced"
+                                                        : undefined
+                                                }
+                                            />
+                                            {messages > 0 && messages}
+                                        </>
+                                    }
+                                />
+                            )}
                             {user && user.realms.length > 0 && !subtle && (
                                 <IconToggleButton
                                     pressed={showRealms}
@@ -124,25 +143,6 @@ export const Header = ({
                                     }}
                                     icon={<User />}
                                     testId="toggle-user-section"
-                                />
-                            )}
-                            {user && (
-                                <IconToggleButton
-                                    title="Inbox"
-                                    pressed={location.href.includes("inbox")}
-                                    onClick={() => (location.href = "#/inbox")}
-                                    icon={
-                                        <>
-                                            <Bell
-                                                classNameArg={
-                                                    messages > 0
-                                                        ? "accent right_half_spaced"
-                                                        : undefined
-                                                }
-                                            />
-                                            {messages > 0 && messages}
-                                        </>
-                                    }
                                 />
                             )}
                             {user && (
