@@ -1007,6 +1007,12 @@ button.active {
     transform: skew(-10deg);
 }
 
+/* Hide the reaction progress indicator when not in use */
+.active[style*="width: 0"] {
+    border: none;
+    background: none;
+}
+
 .iconed {
     white-space: nowrap;
     margin: 0.5em;
