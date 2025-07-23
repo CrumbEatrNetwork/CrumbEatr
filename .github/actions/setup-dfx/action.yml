@@ -23,6 +23,10 @@ runs:
         else
           echo "DFX not restored from cache, running install script:"
           DFXVM_INIT_YES=1 DFX_VERSION=${{ env.dfx_version }} sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+          
+          # Add DFX to CrumbEatr GitHub Actions PATH
+          echo "/home/runner/.local/share/dfx/bin" >> $GITHUB_PATH
+          export PATH="/home/runner/.local/share/dfx/bin:$PATH"
         fi
         echo "DFX version"
         dfx --version
