@@ -103,7 +103,7 @@ export const ApiGenerator = (
     } else {
         // NOTE: dfx default port is 4943 when networks.json config file is not present
         // Currently using ephemeral port 55644 for local Internet Identity testing
-        options.host = "http://127.0.0.1:55644";
+        options.host = "http://127.0.0.1:51118";
     }
     const agent = new HttpAgent(options);
     if (!mainnetMode)
