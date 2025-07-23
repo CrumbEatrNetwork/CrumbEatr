@@ -548,7 +548,8 @@ hr {
     border: 2px solid #000000;
 }
 
-.reaction_button:hover {
+.reaction_button:hover,
+.reaction_button.selected {
     background: $frame;
 }
 
