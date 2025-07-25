@@ -101,9 +101,19 @@ export const ApiGenerator = (
     if (mainnetMode) {
         options.host = `https://${CANISTER_ID}.ic0.app`;
     } else {
-        // NOTE: dfx default port is 4943 when networks.json config file is not present
-        // Currently using ephemeral port 55644 for local Internet Identity testing
-        options.host = "http://127.0.0.1:51118";
+        /*
+         * Determine the port of the local replica.
+         *
+         * Priority order:
+         *   1.  DFX_PORT environment variable injected at runtime (e.g. `DFX_PORT=8080 npm start`)
+         *   2.  window.location.port when running in the browser
+         *   3.  fall back to 8080 (dfx default when networks.json binds 8080)
+         */
+        const port =
+            (typeof process !== "undefined" && process.env.DFX_PORT) ||
+            (typeof window !== "undefined" && window.location.port) ||
+            "8080";
+        options.host = `http://127.0.0.1:${port}`;
     }
     const agent = new HttpAgent(options);
     if (!mainnetMode)

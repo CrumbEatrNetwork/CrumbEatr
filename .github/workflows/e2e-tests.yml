@@ -44,6 +44,9 @@ jobs:
           dfx extension install nns
           dfx nns install
 
+      - name: Record replica port
+        run: echo "DFX_PORT=$(dfx info webserver-port)" >> $GITHUB_ENV
+
       - name: Deploy canister
         run: |
           dfx canister create --all
@@ -51,6 +54,8 @@ jobs:
           make local_deploy
 
       - name: Run e2e tests
+        env:
+          DFX_PORT: ${{ env.DFX_PORT }}
         run: npm run test:e2e
 
       - name: Stop DFX
