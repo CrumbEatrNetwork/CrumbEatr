@@ -206,7 +206,7 @@ export const PostView = ({
         ) < 0 || post.userObject.rewards < 0;
     const user = window.user;
     const showReport =
-        post.report && !post.report.closed && user && user.stalwart;
+        post.report && !post.report.closed && user && user.arbiter;
     const deleted = post.hashes.length > 0;
     const isComment = !isRoot(post);
     const commentAsPost = isComment && !isCommentView;

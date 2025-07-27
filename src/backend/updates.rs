@@ -618,7 +618,7 @@ async fn set_emergency_release(binary: ByteBuf) {
         if binary.is_empty()
             || !state
                 .principal_to_user(caller())
-                .map(|user| user.stalwart)
+                .map(|user| user.arbiter)
                 .unwrap_or_default()
         {
             return;
@@ -725,7 +725,7 @@ fn backup() {
 fn archive() {
     mutate(|state| {
         let user = state.principal_to_user(caller()).unwrap();
-        if !user.stalwart || state.last_archive + MINUTE * 15 > time() {
+        if !user.arbiter || state.last_archive + MINUTE * 15 > time() {
             return;
         }
         state

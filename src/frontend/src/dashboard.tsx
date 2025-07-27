@@ -263,8 +263,8 @@ export const Dashboard = ({}) => {
                 </div>
                 <hr />
                 <div>
-                    <h2>STALWARTS</h2>
-                    {userList(stats.stalwarts)}
+                    <h2>ARBITERS</h2>
+                    {userList(stats.arbiters)}
                 </div>
                 <hr />
                 {logSelector}

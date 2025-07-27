@@ -643,7 +643,7 @@ export const RealmHeader = ({ name }: { name: string }) => {
                                             !confirm(
                                                 `By joining the realm ${name} you confirm that you understand its description ` +
                                                     `and agree with all terms and conditions mentioned there. ` +
-                                                    `Any rule violation can lead to a moderation by stalwarts or ` +
+                                                    `Any rule violation can lead to a moderation by arbiters or ` +
                                                     `to realm controllers moving the post out of the realm which incurs ` +
                                                     `a penalty of ${realm.cleanup_penalty} credits and reward points.`,
                                             )

@@ -18,7 +18,7 @@ test("Important links work", async ({ page }) => {
         page.getByRole("heading", { name: "WHITE PAPER" }),
     ).toBeVisible();
     await expect(
-        page.getByRole("heading", { name: "Stalwarts" }),
+        page.getByRole("heading", { name: "Arbiters" }),
     ).toBeVisible();
     await page.goBack();
 

@@ -67,7 +67,7 @@ export const Profile = ({ handle }: { handle: string }) => {
     }
     const user = window.user;
     const showReport =
-        profile.report && !profile.report.closed && user && user.stalwart;
+        profile.report && !profile.report.closed && user && user.arbiter;
 
     const title = (
         <div className="text_centered vertically_spaced">
@@ -503,8 +503,8 @@ export const getLabels = (profile: User) => {
     } else if (Number(profile.timestamp) < 1672500000000000000) {
         labels.push(["OG", "PaleVioletRed"]);
     }
-    if (profile.stalwart) {
-        labels.push(["STALWART", "Salmon"]);
+    if (profile.arbiter) {
+        labels.push(["ARBITER", "Salmon"]);
     }
     if (profile.active_weeks > 12) {
         labels.push(["FREQUENTER", "SlateBlue"]);

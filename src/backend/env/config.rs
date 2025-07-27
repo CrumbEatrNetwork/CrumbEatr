@@ -99,13 +99,13 @@ pub struct Config {
     pub inactivity_penalty: Credits,
     pub inactivity_duration_weeks: u64,
 
-    // top x percentage of users selected as stalwarts
-    pub stalwart_percentage: usize,
-    pub min_stalwart_activity_weeks: u8,
-    pub min_stalwart_account_age_weeks: u8,
-    pub stalwart_moderation_reward: Credits,
+    // top x percentage of users selected as arbiters
+    pub arbiter_percentage: usize,
+    pub min_arbiter_activity_weeks: u8,
+    pub min_arbiter_account_age_weeks: u8,
+    pub arbiter_moderation_reward: Credits,
 
-    // percentage of stalwarts needed to confirm a report
+    // percentage of arbiters needed to confirm a report
     pub report_confirmation_percentage: u16,
 
     pub max_post_length: usize,
@@ -285,18 +285,18 @@ pub const CONFIG: &Config = &Config {
     inactivity_duration_weeks: 26,
     voting_power_activity_weeks: 2,
 
-    stalwart_percentage: 3,
+    arbiter_percentage: 3,
     #[cfg(feature = "staging")]
-    min_stalwart_activity_weeks: 1,
+    min_arbiter_activity_weeks: 1,
     #[cfg(not(feature = "staging"))]
-    min_stalwart_activity_weeks: 6,
+    min_arbiter_activity_weeks: 6,
 
     #[cfg(feature = "staging")]
-    min_stalwart_account_age_weeks: 1,
+    min_arbiter_account_age_weeks: 1,
     #[cfg(not(feature = "staging"))]
-    min_stalwart_account_age_weeks: 26,
+    min_arbiter_account_age_weeks: 26,
 
-    stalwart_moderation_reward: 20,
+    arbiter_moderation_reward: 20,
 
     max_post_length: 15000,
     max_tag_length: 30,

@@ -725,9 +725,9 @@ export const FlagButton = ({
                     prompt(
                         `You are reporting this ${
                             domain == "post" ? "post" : "user"
-                        } to stalwarts. ` +
+                        } to arbiters. ` +
                             (domain == "user"
-                                ? `It is recommended to talk to stalwarts first. `
+                                ? `It is recommended to talk to arbiters first. `
                                 : "") +
                             `Reporting is a SERIOUS measure. ` +
                             `If there is a chance to convince a user to stop misbehaving, please do this without a report! ` +

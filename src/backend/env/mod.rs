@@ -79,7 +79,7 @@ pub struct Stats {
     last_weekly_chores: u64,
     last_daily_chores: u64,
     last_hourly_chores: u64,
-    stalwarts: Vec<UserId>,
+    arbiters: Vec<UserId>,
     bots: Vec<UserId>,
     state_size: u64,
     active_users: usize,
@@ -533,7 +533,7 @@ impl State {
                 CONFIG.dao_realm.to_string(),
                 Realm {
                     description:
-                        "The default DAO realm. Stalwarts are added and removed by default."
+                        "The default DAO realm. Arbiters are added and removed by default."
                             .to_string(),
                     ..Default::default()
                 },
@@ -1384,7 +1384,7 @@ impl State {
                 state.logger.info("An emergency release is pending! 🚨");
             }
 
-            state.recompute_stalwarts(now);
+            state.recompute_arbiters(now);
 
             for user in state.users.values_mut() {
                 user.downvotes.retain(|_, timestamp| {
@@ -1720,7 +1720,7 @@ impl State {
         ));
     }
 
-    fn recompute_stalwarts(&mut self, now: u64) {
+    fn recompute_arbiters(&mut self, now: u64) {
         let mut balances = self
             .users
             .values()
@@ -1730,10 +1730,10 @@ impl State {
 
         let users = self.users.values_mut().collect::<Vec<_>>();
 
-        let mut stalwart_seats = (users.len() * CONFIG.stalwart_percentage / 100).max(3);
+        let mut arbiter_seats = (users.len() * CONFIG.arbiter_percentage / 100).max(3);
         let top_balances = balances
             .into_iter()
-            .take(stalwart_seats)
+            .take(arbiter_seats)
             .collect::<BTreeMap<_, _>>();
         let mut left = Vec::new();
         let mut joined = Vec::new();
@@ -1745,47 +1745,47 @@ impl State {
                 || u.is_bot()
                 || u.controversial()
                 || now.saturating_sub(u.timestamp)
-                    < WEEK * CONFIG.min_stalwart_account_age_weeks as u64
+                    < WEEK * CONFIG.min_arbiter_account_age_weeks as u64
             {
-                u.stalwart = false;
+                u.arbiter = false;
                 continue;
             }
             match (
-                u.stalwart,
-                u.active_weeks >= CONFIG.min_stalwart_activity_weeks as u32,
+                u.arbiter,
+                u.active_weeks >= CONFIG.min_arbiter_activity_weeks as u32,
                 top_balances.is_empty() || top_balances.contains_key(&u.id),
-                stalwart_seats,
+                arbiter_seats,
             ) {
                 // User is qualified but no seats left
                 (true, true, true, 0) => {
-                    u.stalwart = false;
+                    u.arbiter = false;
                     left.push(u.id);
                     left_logs.push(format!("@{} (outcompeted)", u.name));
                 }
-                // A user is qualified and is already a stalwart and seats available
+                // A user is qualified and is already an arbiter and seats available
                 (true, true, true, _) => {
-                    stalwart_seats = stalwart_seats.saturating_sub(1);
+                    arbiter_seats = arbiter_seats.saturating_sub(1);
                 }
                 // User is qualified but not enough balance
                 (true, true, false, _) => {
-                    u.stalwart = false;
+                    u.arbiter = false;
                     left.push(u.id);
                     left_logs.push(format!("@{} (balance)", u.name));
                 }
-                // A user is a stalwart but became inactive
+                // A user is an arbiter but became inactive
                 (true, false, _, _) => {
-                    u.stalwart = false;
+                    u.arbiter = false;
                     left.push(u.id);
                     left_logs.push(format!("@{} (inactivity)", u.name));
                 }
-                // A user is not a stalwart, but qualified and there are seats left
+                // A user is not an arbiter, but qualified and there are seats left
                 (false, true, true, seats) if seats > 0 => {
-                    u.stalwart = true;
+                    u.arbiter = true;
                     joined.push(u.id);
                     joined_logs.push(format!("@{}", u.name));
-                    stalwart_seats = stalwart_seats.saturating_sub(1);
+                    arbiter_seats = arbiter_seats.saturating_sub(1);
                     u.notify(format!(
-                        "Congratulations! You are a {} stalwart now!",
+                        "Congratulations! You are a {} arbiter now!",
                         CONFIG.name
                     ));
                 }
@@ -1807,7 +1807,7 @@ impl State {
         }
 
         self.logger.info(format!(
-            "Stalwart election ⚔️: {} joined; {} have left; `{}` seats vacant.",
+            "Arbiter election ⚔️: {} joined; {} have left; `{}` seats vacant.",
             if joined_logs.is_empty() {
                 "no new users".to_string()
             } else {
@@ -1818,7 +1818,7 @@ impl State {
             } else {
                 left_logs.join(", ")
             },
-            stalwart_seats
+            arbiter_seats
         ));
     }
 
@@ -1916,7 +1916,7 @@ impl State {
         if name.chars().all(|c| char::is_ascii_digit(&c)) {
             return Err("should have at least one character".into());
         }
-        if ["all", "stalwarts", "dao"].contains(&name.as_str()) {
+        if ["all", "arbiters", "dao"].contains(&name.as_str()) {
             return Err("reserved handle".into());
         }
         Ok(())
@@ -2147,15 +2147,15 @@ impl State {
     }
 
     pub fn stats(&self, now: Time) -> Stats {
-        let mut stalwarts = Vec::new();
+        let mut arbiters = Vec::new();
         let mut users_online = 0;
         let mut invited_users = 0;
         let mut active_users = 0;
         let mut bots = Vec::new();
         let mut credits = 0;
         for user in self.users.values() {
-            if user.stalwart {
-                stalwarts.push(user);
+            if user.arbiter {
+                arbiters.push(user);
             }
             if now < user.last_activity + CONFIG.online_activity_minutes {
                 users_online += 1;
@@ -2171,7 +2171,7 @@ impl State {
             }
             credits += user.credits();
         }
-        stalwarts.sort_unstable_by_key(|u| u.id);
+        arbiters.sort_unstable_by_key(|u| u.id);
         let posts = self.root_posts;
         let volume_day = self
             .ledger
@@ -2216,7 +2216,7 @@ impl State {
             total_rewards_shared: self.total_rewards_shared,
             account: invoices::main_account().to_string(),
             users_online,
-            stalwarts: stalwarts.into_iter().map(|u| u.id).collect(),
+            arbiters: arbiters.into_iter().map(|u| u.id).collect(),
             bots,
             state_size: stable64_size() << 16,
             invited_users,
@@ -2240,16 +2240,16 @@ impl State {
     ) -> Result<(), String> {
         let reporter = self.principal_to_user(principal).ok_or("no user found")?;
         let reporter_id = reporter.id;
-        if !reporter.stalwart {
-            return Err("only stalwarts can vote on reports".into());
+        if !reporter.arbiter {
+            return Err("only arbiters can vote on reports".into());
         }
-        let stalwarts = self.users.values().filter(|u| u.stalwart).count();
+        let arbiters = self.users.values().filter(|u| u.arbiter).count();
         let (user_id, report, penalty, subject) = match domain.as_str() {
             "post" => Post::mutate(
                 self,
                 &id,
                 |post| -> Result<(UserId, Report, Credits, String), String> {
-                    post.vote_on_report(stalwarts, reporter_id, vote)?;
+                    post.vote_on_report(arbiters, reporter_id, vote)?;
                     let post_user = post.user;
                     let post_report = post.report.clone().ok_or("no report")?;
                     Ok((
@@ -2269,7 +2269,7 @@ impl State {
                     .get_mut(&id)
                     .and_then(|u| u.report.as_mut())
                     .ok_or("no user found")?;
-                report.vote(stalwarts, reporter_id, vote)?;
+                report.vote(arbiters, reporter_id, vote)?;
                 (
                     id,
                     report.clone(),
@@ -2357,7 +2357,7 @@ impl State {
                     Ok(post.user)
                 })?;
                 self.notify_with_predicate(
-                    &|u| u.stalwart && u.id != user_id,
+                    &|u| u.arbiter && u.id != user_id,
                     "This post was reported. Please review the report!",
                     Predicate::ReportOpen(id),
                 );
@@ -2381,7 +2381,7 @@ impl State {
                 misbehaving_user.report = Some(report);
                 let user_name = misbehaving_user.name.clone();
                 self.notify_with_predicate(
-                    &|u| u.stalwart && u.id != id,
+                    &|u| u.arbiter && u.id != id,
                     format!("The user @{} was reported. Please open their profile and review the report!", user_name),
                     Predicate::UserReportOpen(id),
                 );
@@ -2480,7 +2480,7 @@ impl State {
         .expect("couldn't delete post");
 
         if has_open_report {
-            self.denotify_users(&|u| u.stalwart);
+            self.denotify_users(&|u| u.arbiter);
         }
 
         Ok(())
@@ -3297,7 +3297,7 @@ pub(crate) mod tests {
             assert_eq!(*state.balances.get(&account(pr(1))).unwrap(), 11100);
 
             let user = state.principal_to_user_mut(pr(1)).unwrap();
-            user.stalwart = true;
+            user.arbiter = true;
             let user_id = user.id;
             let proposal_id = proposals::propose(
                 state,
@@ -4547,7 +4547,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn test_stalwarts() {
+    fn test_arbiters() {
         STATE.with(|cell| {
             cell.replace(Default::default());
             let state = &mut *cell.borrow_mut();
@@ -4561,7 +4561,7 @@ pub(crate) mod tests {
                 .controllers
                 .is_empty());
 
-            let now = CONFIG.min_stalwart_account_age_weeks as u64 * WEEK;
+            let now = CONFIG.min_arbiter_account_age_weeks as u64 * WEEK;
 
             for i in 0..200 {
                 let id = create_user(state, pr(i as u8));
@@ -4571,13 +4571,13 @@ pub(crate) mod tests {
                 // every second user was active
                 if i % 2 == 0 {
                     user.last_activity = now;
-                    user.active_weeks = CONFIG.min_stalwart_activity_weeks as u32;
+                    user.active_weeks = CONFIG.min_arbiter_activity_weeks as u32;
                     user.timestamp = 0;
                     user.take_positive_rewards();
                 }
             }
 
-            state.recompute_stalwarts(now + WEEK * 2);
+            state.recompute_arbiters(now + WEEK * 2);
 
             assert!(!state
                 .realms
@@ -4590,12 +4590,12 @@ pub(crate) mod tests {
                 insert_balance(state, pr(i as u8), i * 100);
             }
 
-            state.recompute_stalwarts(now + WEEK * 3);
+            state.recompute_arbiters(now + WEEK * 3);
             assert_eq!(
                 state
                     .users
                     .values()
-                    .filter_map(|u| u.stalwart.then_some(u.id))
+                    .filter_map(|u| u.arbiter.then_some(u.id))
                     .collect::<Vec<UserId>>(),
                 vec![194, 196, 198]
             );

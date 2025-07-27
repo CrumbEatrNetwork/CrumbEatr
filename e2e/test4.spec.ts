@@ -29,7 +29,7 @@ test.describe("Report and transfer to user", () => {
         await page.getByRole("button", { name: "CREATE USER" }).click();
         await page.getByPlaceholder("alphanumeric").fill("joe");
         await page.getByRole("button", { name: "SAVE" }).click();
-        exec("dfx canister call crumbeatr make_stalwart '(\"joe\")'");
+        exec("dfx canister call crumbeatr make_arbiter '(\"joe\")'");
     });
 
     test("Create two invites", async () => {
@@ -158,7 +158,7 @@ test.describe("Report and transfer to user", () => {
                 if (
                     dialog
                         .message()
-                        .includes("You are reporting this user to stalwarts")
+                        .includes("You are reporting this user to arbiters")
                 ) {
                     await dialog.accept("mfer");
                 } else if (dialog.message().includes("Report accepted!")) {

@@ -86,14 +86,14 @@ fn create_test_user(name: String) -> u64 {
 }
 
 #[update]
-fn make_stalwart(user_handle: String) {
+fn make_arbiter(user_handle: String) {
     mutate(|state| {
         state
             .users
             .values_mut()
             .find(|user| &user.name == &user_handle)
             .map(|user| {
-                user.stalwart = true;
+                user.arbiter = true;
             })
     });
 }

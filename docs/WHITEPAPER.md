@@ -44,9 +44,9 @@ The fee is computed by multiplying `$excess_penalty` with the number of excessiv
 -   Additionally, users owning tokens and being active within the last `$voting_power_activity_weeks` weeks receive a share of $name's revenue proportionate to their token holdings.
 -   New rewards received by users with credit balance lower than `$credits_per_xdr` are automatically converted to credits and are used to top up the credit balance of these users.
 
-## Stalwarts
+## Arbiters
 
-Stalwarts represent the union of top `$stalwart_percentage%` of users with the highest $`$token_symbol`  balance, active during the last  `$min_stalwart_activity_weeks` consecutive weeks and possessing accounts older than `$min_stalwart_account_age_weeks` weeks.
+Arbiters represent the union of top `$arbiter_percentage%` of users with the highest $`$token_symbol`  balance, active during the last  `$min_arbiter_activity_weeks` consecutive weeks and possessing accounts older than `$min_arbiter_account_age_weeks` weeks.
 They are considered trusted community members, authorized to carry out moderating actions and propose upgrades.
 
 ## Realms
@@ -54,7 +54,7 @@ They are considered trusted community members, authorized to carry out moderatin
 Realms are sub-communities centered around specific topics.
 Each realm can establish its terms and conditions, breaching which can lead to:
 
--   Flagging of the user's post to stalwarts.
+-   Flagging of the user's post to arbiters.
 -   Moving the post from a realm by the realm controller, incurring penalties.
 
 Upon joining a realm, users implicitly agree to its terms and conditions.
@@ -72,22 +72,22 @@ Content and behavior not permitted on $name falls into one of the following cate
 -   Content created with malicious intent, such as gaming the $name system.
 -   Content and behavior that violate realm-specific rules.
 
-This policy is intentionally broad and necessitates social consensus among stalwarts.
+This policy is intentionally broad and necessitates social consensus among arbiters.
 
 **Posts contravening this policy are subject to moderation.**
 
 ## Moderation
 
-Moderation on $name is decentralized; anyone can initiate it, and stalwarts can execute it.
-Whenever a post or user is reported, all stalwarts receive notifications and are expected to validate or dismiss the report.
-Once `$report_confirmation_percentage%` of stalwarts concur on the report's validity, it is closed.
+Moderation on $name is decentralized; anyone can initiate it, and arbiters can execute it.
+Whenever a post or user is reported, all arbiters receive notifications and are expected to validate or dismiss the report.
+Once `$report_confirmation_percentage%` of arbiters concur on the report's validity, it is closed.
 For confirmed reports:
 
 -   The violating user loses `$reporting_penalty_post` (post report) or `$reporting_penalty_misbehaviour` (user report) rewards, along with an equivalent amount of credits.
 -   The reporter receives half of this penalty as rewards.
 
-If stalwarts dismiss the report, the reporter loses half the penalty as credits and rewards.
-In both cases, participating stalwarts share rewards from the penalty fee, capped at `$stalwart_moderation_reward`.
+If arbiters dismiss the report, the reporter loses half the penalty as credits and rewards.
+In both cases, participating arbiters share rewards from the penalty fee, capped at `$arbiter_moderation_reward`.
 
 ## Governance
 
@@ -225,4 +225,4 @@ $name's DAO has a bug bounty program with classifications and rewards in `$token
 |  1  | Bugs enabling unsanctioned state mutations affecting data, with moderate impact on decentralization or autonomy.                      |  `400` |
 |  2  | Bugs enabling unsanctioned state mutations without substantial impact on $name.                                                       |  `100` |
 
-Report bugs to stalwarts immediately if they fall under any of these categories.
+Report bugs to arbiters immediately if they fall under any of these categories.

@@ -197,7 +197,7 @@ export type User = {
     previous_names: string[];
     report?: Report;
     post_reports: { [id: PostId]: bigint };
-    stalwart: boolean;
+    arbiter: boolean;
     followees: UserId[];
     followers: UserId[];
     feeds: string[][];
@@ -287,7 +287,7 @@ declare global {
                 team_tokens: { [name: UserId]: number };
                 last_upgrade: number;
                 buckets: [string, number][];
-                stalwarts: UserId[];
+                arbiters: UserId[];
             };
             config: {
                 user_report_validity_days: number;
@@ -295,7 +295,7 @@ declare global {
                 max_report_length: number;
                 credits_per_xdr: number;
                 max_funding_amount: number;
-                min_stalwart_karma: number;
+                min_arbiter_karma: number;
                 min_credits_for_inviting: number;
                 max_credits_mint_kilos: number;
                 logo: string;
@@ -319,8 +319,8 @@ declare global {
                 voting_power_activity_weeks: number;
                 trusted_user_min_karma: number;
                 trusted_user_min_age_weeks: number;
-                min_stalwart_account_age_weeks: number;
-                min_stalwart_activity_weeks: number;
+                min_arbiter_account_age_weeks: number;
+                min_arbiter_activity_weeks: number;
                 feed_page_size: number;
                 reactions: [number, number][];
                 token_decimals: number;

@@ -31,29 +31,29 @@ impl Report {
 
     pub fn vote(
         &mut self,
-        stalwarts: usize,
-        stalwart: UserId,
+        arbiters: usize,
+        arbiter: UserId,
         confirmed: bool,
     ) -> Result<ReportState, String> {
         if self.closed {
             return Err("report is already closed".into());
         }
-        if stalwart == self.reporter
-            || self.confirmed_by.contains(&stalwart)
-            || self.rejected_by.contains(&stalwart)
+        if arbiter == self.reporter
+            || self.confirmed_by.contains(&arbiter)
+            || self.rejected_by.contains(&arbiter)
         {
             return Err(
                 "you can't vote on this report becasue you created it or voted already".into(),
             );
         }
         if confirmed {
-            self.confirmed_by.push(stalwart);
+            self.confirmed_by.push(arbiter);
         } else {
-            self.rejected_by.push(stalwart);
+            self.rejected_by.push(arbiter);
         }
         let votes = self.confirmed_by.len().max(self.rejected_by.len()) as u16;
         Ok(
-            if votes * 100 >= CONFIG.report_confirmation_percentage * stalwarts as u16 {
+            if votes * 100 >= CONFIG.report_confirmation_percentage * arbiters as u16 {
                 self.closed = true;
                 if self.rejected() {
                     ReportState::Rejected
@@ -83,7 +83,7 @@ pub fn finalize_report(
             -(penalty as i64),
             format!("moderation penalty for {}", subject),
         );
-        user.stalwart = false;
+        user.arbiter = false;
         user.active_weeks = 0;
         let unit = penalty.min(user.credits()) / 2;
         let reporter = state
@@ -91,7 +91,7 @@ pub fn finalize_report(
             .get_mut(&report.reporter)
             .ok_or("no user found")?;
         reporter.notify(format!(
-            "Your report for {} was confirmed by stalwarts. Thanks for keeping {} safe and clean!",
+            "Your report for {} was confirmed by arbiters. Thanks for keeping {} safe and clean!",
             subject, CONFIG.name
         ));
         state
@@ -107,7 +107,7 @@ pub fn finalize_report(
             .map_err(|err| format!("couldn't reward reporter: {}", err))?;
         confirmed_user_report = domain == "misbehaviour";
         state.logger.info(format!(
-            "Report of {} was confirmed by `{}%` of stalwarts: {}",
+            "Report of {} was confirmed by `{}%` of arbiters: {}",
             subject, CONFIG.report_confirmation_percentage, &report.reason
         ));
         (user_id, unit)
@@ -118,7 +118,7 @@ pub fn finalize_report(
             .get_mut(&report.reporter)
             .ok_or("no user found")?;
         reporter.notify(format!(
-            "Your report of {} was rejected by stalwarts",
+            "Your report of {} was rejected by arbiters",
             subject
         ));
         let unit = penalty.min(reporter.credits());
@@ -127,40 +127,40 @@ pub fn finalize_report(
         let reporter_id = reporter.id;
         (reporter_id, unit)
     };
-    let stalwarts = report
+    let arbiters = report
         .confirmed_by
         .iter()
         .chain(report.rejected_by.iter())
         .cloned()
         .collect::<Vec<_>>();
-    let stalwart_reward = (unit / stalwarts.len() as u64).min(CONFIG.stalwart_moderation_reward);
-    let mut total_stalwart_rewards = 0;
-    let log = &format!("stalwarts moderation rewards for {}", subject);
-    for stalwart_id in stalwarts.iter() {
-        let moderator = state.users.get(stalwart_id).expect("no user found").id;
+    let arbiter_reward = (unit / arbiters.len() as u64).min(CONFIG.arbiter_moderation_reward);
+    let mut total_arbiter_rewards = 0;
+    let log = &format!("arbiters moderation rewards for {}", subject);
+    for arbiter_id in arbiters.iter() {
+        let moderator = state.users.get(arbiter_id).expect("no user found").id;
         state
             .credit_transfer(
                 sponsor_id,
                 moderator,
-                stalwart_reward,
+                arbiter_reward,
                 0,
                 Destination::Rewards,
                 log,
                 None,
             )
-            .map_err(|err| format!("couldn't reward stalwarts: {}", err))?;
-        total_stalwart_rewards += stalwart_reward;
+            .map_err(|err| format!("couldn't reward arbiters: {}", err))?;
+        total_arbiter_rewards += arbiter_reward;
     }
-    if unit > total_stalwart_rewards {
+    if unit > total_arbiter_rewards {
         state
             .charge(
                 sponsor_id,
-                unit.saturating_sub(total_stalwart_rewards),
+                unit.saturating_sub(total_arbiter_rewards),
                 format!("moderation penalty for {}", subject),
             )
             .expect("couldn't charge user");
     }
-    state.denotify_users(&|u| u.stalwart);
+    state.denotify_users(&|u| u.arbiter);
     let user = state.users.get(&user_id).ok_or("no user found")?;
     if confirmed_user_report && user.credits() > 0 {
         state.charge(user_id, user.credits(), "penalty for misbehaviour")?;
@@ -192,7 +192,7 @@ mod tests {
             for i in 1..20 {
                 let id = create_user(state, pr(i as u8));
                 let user = state.users.get_mut(&id).unwrap();
-                user.stalwart = true;
+                user.arbiter = true;
             }
 
             let reporter = pr(7);
@@ -274,7 +274,7 @@ mod tests {
             // the reporter is still the same
             assert!(report.reporter == state.principal_to_user(reporter).unwrap().id);
 
-            // stalwart 3 confirmed the report
+            // arbiter 3 confirmed the report
             state
                 .vote_on_report(pr(3), "post".into(), post_id, true)
                 .unwrap();
@@ -291,7 +291,7 @@ mod tests {
             assert_eq!(report.confirmed_by.len(), 1);
             assert!(!report.closed);
 
-            // stalwart 6 rejected the report
+            // arbiter 6 rejected the report
             state
                 .vote_on_report(pr(6), "post".into(), post_id, false)
                 .unwrap();
@@ -304,7 +304,7 @@ mod tests {
             // make sure post still exists
             assert_eq!(&p.body, "bad post");
 
-            // stalwarts 12 & 13 confirmed too
+            // arbiters 12 & 13 confirmed too
             state
                 .vote_on_report(pr(12), "post".into(), post_id, true)
                 .unwrap();
@@ -313,7 +313,7 @@ mod tests {
             assert_eq!(report.confirmed_by.len(), 2);
             assert_eq!(report.rejected_by.len(), 1);
 
-            // stalwart has no karma to reward
+            // arbiter has no karma to reward
             assert_eq!(state.principal_to_user(pr(3)).unwrap().rewards(), 0);
 
             state
@@ -343,18 +343,18 @@ mod tests {
                 reporter.rewards() as Credits,
                 CONFIG.reporting_penalty_post / 2
             );
-            // stalwarts rewarded too
+            // arbiters rewarded too
             assert_eq!(
                 state.principal_to_user(pr(3)).unwrap().rewards() as Credits,
-                CONFIG.stalwart_moderation_reward
+                CONFIG.arbiter_moderation_reward
             );
             assert_eq!(
                 state.principal_to_user(pr(6)).unwrap().rewards() as Credits,
-                CONFIG.stalwart_moderation_reward
+                CONFIG.arbiter_moderation_reward
             );
             assert_eq!(
                 state.principal_to_user(pr(12)).unwrap().rewards() as Credits,
-                CONFIG.stalwart_moderation_reward
+                CONFIG.arbiter_moderation_reward
             );
         });
 
@@ -432,12 +432,12 @@ mod tests {
 
             assert_eq!(
                 state.principal_to_user(pr(9)).unwrap().rewards() as Credits,
-                CONFIG.stalwart_moderation_reward
+                CONFIG.arbiter_moderation_reward
             );
             // he voted twice
             assert_eq!(
                 state.principal_to_user(pr(6)).unwrap().rewards() as Credits,
-                CONFIG.stalwart_moderation_reward * 2
+                CONFIG.arbiter_moderation_reward * 2
             );
         })
     }

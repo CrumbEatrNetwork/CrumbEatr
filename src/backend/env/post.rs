@@ -249,15 +249,15 @@ impl Post {
 
     pub fn vote_on_report(
         &mut self,
-        stalwarts: usize,
-        stalwart: UserId,
+        arbiters: usize,
+        arbiter: UserId,
         confirmed: bool,
     ) -> Result<(), String> {
-        if self.user == stalwart {
+        if self.user == arbiter {
             return Err("no voting on own posts".into());
         }
         let report = self.report.as_mut().ok_or("no report found".to_string())?;
-        if let ReportState::Confirmed = report.vote(stalwarts, stalwart, confirmed)? {
+        if let ReportState::Confirmed = report.vote(arbiters, arbiter, confirmed)? {
             self.delete(vec![self.body.clone()]);
         }
         Ok(())

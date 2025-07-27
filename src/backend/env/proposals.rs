@@ -147,7 +147,7 @@ impl Proposal {
                     .users
                     .get_mut(&self.proposer)
                     .ok_or("user not found")?;
-                proposer.stalwart = false;
+                proposer.arbiter = false;
                 proposer.active_weeks = 0;
                 proposer.change_rewards(
                     -(CONFIG.proposal_rejection_penalty as i64),
@@ -294,8 +294,8 @@ pub fn propose(
     let user = state
         .principal_to_user_mut(caller)
         .ok_or("proposer user not found")?;
-    if !user.stalwart {
-        return Err("only stalwarts can create proposals".to_string());
+    if !user.arbiter {
+        return Err("only arbiters can create proposals".to_string());
     }
     if description.is_empty() {
         return Err("description is empty".to_string());
@@ -446,10 +446,10 @@ mod tests {
 
             assert_eq!(
                 propose(state, pr(1), "test".into(), Payload::Noop, 0),
-                Err("only stalwarts can create proposals".into())
+                Err("only arbiters can create proposals".into())
             );
 
-            state.principal_to_user_mut(pr(1)).unwrap().stalwart = true;
+            state.principal_to_user_mut(pr(1)).unwrap().arbiter = true;
 
             let id = propose(state, pr(1), "test".into(), Payload::Noop, 0)
                 .expect("couldn't create proposal");
@@ -567,7 +567,7 @@ mod tests {
                 )
             }
 
-            state.principal_to_user_mut(proposer).unwrap().stalwart = true;
+            state.principal_to_user_mut(proposer).unwrap().arbiter = true;
 
             // check error cases on voting
             assert_eq!(
@@ -627,7 +627,7 @@ mod tests {
             let user = state.principal_to_user_mut(proposer).unwrap();
             assert_eq!(user.credits(), 1000 - 2 * CONFIG.post_cost);
 
-            assert!(user.stalwart);
+            assert!(user.arbiter);
 
             // last rejection and the proposal is rejected
             assert_eq!(
@@ -649,12 +649,12 @@ mod tests {
                 user.credits(),
                 1000 - CONFIG.proposal_rejection_penalty - 2 * CONFIG.post_cost
             );
-            assert!(!user.stalwart);
+            assert!(!user.arbiter);
             user.change_credits(100, crate::env::user::CreditsDelta::Plus, "")
                 .unwrap();
 
             // create a new proposal
-            user.stalwart = true;
+            user.arbiter = true;
             user.change_rewards(-1000, "");
 
             let prop_id = propose(state, proposer, "test".into(), Payload::Noop, 0)
@@ -695,7 +695,7 @@ mod tests {
                 let user = state.users.get_mut(&id).unwrap();
                 user.change_rewards(100, "test");
             }
-            state.principal_to_user_mut(pr(1)).unwrap().stalwart = true;
+            state.principal_to_user_mut(pr(1)).unwrap().arbiter = true;
 
             let prop_id = propose(state, pr(1), "test".into(), Payload::Noop, time())
                 .expect("couldn't propose");
@@ -741,7 +741,7 @@ mod tests {
                 let user = state.users.get_mut(&id).unwrap();
                 user.change_rewards(100, "test");
             }
-            state.principal_to_user_mut(pr(1)).unwrap().stalwart = true;
+            state.principal_to_user_mut(pr(1)).unwrap().arbiter = true;
 
             let prop_id =
                 propose(state, pr(1), "test".into(), Payload::Noop, 0).expect("couldn't propose");
@@ -783,7 +783,7 @@ mod tests {
                 user.change_rewards(100 * (1 << i), "test");
                 insert_balance(state, p, (100 * (1 << i)) * 100);
             }
-            state.principal_to_user_mut(pr(1)).unwrap().stalwart = true;
+            state.principal_to_user_mut(pr(1)).unwrap().arbiter = true;
 
             state
                 .balances
@@ -838,8 +838,8 @@ mod tests {
                 let user = state.users.get_mut(&id).unwrap();
                 user.change_rewards(100 * (1 << i), "test");
             }
-            state.principal_to_user_mut(pr(1)).unwrap().stalwart = true;
-            state.principal_to_user_mut(pr(2)).unwrap().stalwart = true;
+            state.principal_to_user_mut(pr(1)).unwrap().arbiter = true;
+            state.principal_to_user_mut(pr(2)).unwrap().arbiter = true;
 
             // Case 0: max supply reached
             state
