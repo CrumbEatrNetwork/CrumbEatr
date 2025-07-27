@@ -17,9 +17,7 @@ test("Important links work", async ({ page }) => {
     await expect(
         page.getByRole("heading", { name: "WHITE PAPER" }),
     ).toBeVisible();
-    await expect(
-        page.getByRole("heading", { name: "Arbiters" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Arbiters" })).toBeVisible();
     await page.goBack();
 
     await page.getByRole("link", { name: "DASHBOARD" }).click();
