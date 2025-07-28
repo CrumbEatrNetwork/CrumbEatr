@@ -163,7 +163,7 @@ pub const CONFIG: &Config = &Config {
     #[cfg(not(feature = "staging"))]
     token_symbol: "CRUMB",
     #[cfg(feature = "staging")]
-    token_symbol: "STAGG",
+    token_symbol: "SCRUM",
     token_name: "Crumb",
     token_decimals: 2,
     transaction_fee: 25,
