@@ -374,7 +374,7 @@ const confirmPrincipalChange = async () => {
 const Footer = ({}) => (
     <footer className="small_text text_centered vertically_spaced">
         <>
-            &#10045; <a href="#/post/0">2021</a>
+            &#10045; <a href="#/post/0">2025</a>
             <span className="left_half_spaced right_half_spaced">&middot;</span>
             <a href={location.origin}>{location.host.toLowerCase()}</a>
             <span className="left_half_spaced right_half_spaced">&middot;</span>
