@@ -184,10 +184,10 @@ export const Form = ({
                 }
             const size = Math.ceil(resized_content.byteLength / 1024);
             const resized_content_bytes = new Uint8Array(resized_content);
-            let key = await hash(resized_content_bytes);
+            let key = await hash(resized_content);
             tmpBlobs[key] = resized_content_bytes;
             setTmpBlobs(tmpBlobs);
-            tmpUrls[key] = blobToUrl(resized_content_bytes);
+            tmpUrls[key] = blobToUrl(resized_content);
             setTmpUrls(tmpUrls);
             image = await loadImage(resized_content);
             fileLinks.push(

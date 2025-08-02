@@ -156,7 +156,7 @@ export const HeadBar = ({
     burgerTestId?: any;
 }) => {
     const [showMenu, setShowMenu] = React.useState(false);
-    const effStyle = { ...styleArg } || {};
+    const effStyle = { ...(styleArg || {}) };
     effStyle.flex = 0;
     return (
         <div className="column_container stands_out" style={styleArg}>

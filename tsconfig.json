@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         // output
-        "target": "es2015",
+        "target": "es2018",
         "jsx": "react-jsx",
         "outDir": "./dist/frontend",
         // modules

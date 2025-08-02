@@ -155,13 +155,13 @@ export const ApiGenerator = (
         arg4?: unknown,
     ): Promise<T | null> => {
         let effParams = getEffParams([arg0, arg1, arg2, arg3, arg4]);
-        const arg = Buffer.from(JSON.stringify(effParams));
+        const arg = new TextEncoder().encode(JSON.stringify(effParams)).buffer as ArrayBuffer;
 
         const response = await query_raw(undefined, methodName, arg);
         if (!response) {
             return null;
         }
-        return JSON.parse(Buffer.from(response).toString("utf8"));
+        return JSON.parse(new TextDecoder().decode(response));
     };
 
     const call_raw = async (
@@ -179,12 +179,13 @@ export const ApiGenerator = (
                 console.error(`Call error: ${response.statusText}`);
                 return null;
             }
-            return await polling.pollForResponse(
+            const pollResult = await polling.pollForResponse(
                 agent,
                 canisterId,
                 requestId,
                 polling.defaultStrategy(),
             );
+            return pollResult.reply;
         } catch (error) {
             console.error(error);
             return null;
@@ -217,7 +218,7 @@ export const ApiGenerator = (
         const responseBytes = await call_raw(
             undefined,
             methodName,
-            Buffer.from(JSON.stringify(effParams)),
+            new TextEncoder().encode(JSON.stringify(effParams)).buffer as ArrayBuffer,
         );
         if (!responseBytes || !responseBytes.byteLength) {
             return null;

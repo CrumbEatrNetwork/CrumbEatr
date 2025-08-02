@@ -86,16 +86,17 @@ export const Content = ({
 
     if (!post)
         return (
-            <ReactMarkdown
-                components={
-                    {
-                        a: linkRenderer(preview),
-                    } as unknown as any
-                }
-                children={value}
-                remarkPlugins={[remarkGfm]}
-                className={`selectable ${classNameArg}`}
-            />
+            <div className={`selectable ${classNameArg}`}>
+                <ReactMarkdown
+                    components={
+                        {
+                            a: linkRenderer(preview),
+                        } as unknown as any
+                    }
+                    children={value}
+                    remarkPlugins={[remarkGfm]}
+                />
+            </div>
         );
 
     let cutPos = value.indexOf(CUT);
@@ -199,11 +200,11 @@ const markdownizer = (
     className?: string,
 ) =>
     !value ? null : (
-        <ReactMarkdown
-            children={value}
-            remarkPlugins={[remarkGfm]}
-            className={`selectable ${className}`}
-            components={{
+        <div className={`selectable ${className}`}>
+            <ReactMarkdown
+                children={value}
+                remarkPlugins={[remarkGfm]}
+                components={{
                 h1: ({ node, children, ...props }) => {
                     if (!blogTitle) return <h1 {...props}>{children}</h1>;
                     let { author, created, length, realm } = blogTitle;
@@ -291,7 +292,8 @@ const markdownizer = (
                     );
                 },
             }}
-        />
+            />
+        </div>
     );
 
 const Gallery = ({ children }: any) => {
