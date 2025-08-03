@@ -2,6 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -49,6 +50,61 @@ module.exports = {
     devtool: isDevelopment ? "source-map" : false,
     optimization: {
         minimize: !isDevelopment,
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    compress: {
+                        drop_console: true,
+                        dead_code: true,
+                        passes: 2,
+                    },
+                    output: {
+                        comments: false,
+                    },
+                },
+                extractComments: false,
+            }),
+        ],
+        splitChunks: {
+            chunks: "all",
+            cacheGroups: {
+                // Vendor chunk for node_modules
+                vendor: {
+                    test: /[\\/]node_modules[\\/]/,
+                    name: "vendors",
+                    chunks: "all",
+                    priority: 20,
+                    minSize: 20000,
+                },
+                // React-specific chunk
+                react: {
+                    test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+                    name: "react",
+                    chunks: "all",
+                    priority: 30,
+                },
+                // DFINITY/IC libraries
+                dfinity: {
+                    test: /[\\/]node_modules[\\/]@dfinity[\\/]/,
+                    name: "dfinity",
+                    chunks: "all",
+                    priority: 25,
+                },
+                // App components in single chunk
+                appComponents: {
+                    test: /[\\/]src[\\/]frontend[\\/]src[\\/](?!index\.tsx$).*\.tsx$/,
+                    name: "app-components",
+                    chunks: "all",
+                    priority: 15,
+                },
+                // Default chunk for remaining code
+                default: {
+                    minChunks: 2,
+                    priority: 1,
+                    reuseExistingChunk: true,
+                },
+            },
+        },
     },
     resolve: {
         extensions: [".js", ".ts", ".jsx", ".tsx"],
@@ -57,8 +113,11 @@ module.exports = {
         },
     },
     output: {
-        filename: "index.js",
+        filename: "[name].js",
+        chunkFilename: "[name].chunk.js",
         path: path.join(__dirname, "dist", frontendDirectory),
+        chunkFormat: "array-push",
+        crossOriginLoading: "anonymous",
         clean: true,
     },
 
@@ -69,8 +128,14 @@ module.exports = {
     // tutorial, uncomment the following lines:
     module: {
         rules: [
-            // { test: /\.css$/, use: ['style-loader','css-loader'] },
-            { test: /\.(ts|tsx|jsx)$/, loader: "ts-loader" },
+            { test: /\.js\.map$/, loader: "ignore-loader" },
+            { test: /\.d\.ts\.map$/, loader: "ignore-loader" },
+            { test: /\.d\.ts$/, loader: "ignore-loader" },
+            {
+                test: /\.(ts|tsx|jsx)$/,
+                loader: "ts-loader",
+                exclude: [/node_modules/],
+            },
             { test: /\.(md|css|svg)/i, use: "raw-loader" },
         ],
     },
@@ -117,15 +182,16 @@ module.exports = {
     // proxy /api to port 8000 during development
     devServer: {
         host: "localhost",
-        proxy: {
-            "/api": {
+        proxy: [
+            {
+                context: ["/api"],
                 target: "http://127.0.0.1:4943",
                 changeOrigin: true,
                 pathRewrite: {
                     "^/api": "/api",
                 },
             },
-        },
+        ],
         hot: true,
         watchFiles: [path.resolve(__dirname, "src", frontendDirectory)],
         liveReload: true,
