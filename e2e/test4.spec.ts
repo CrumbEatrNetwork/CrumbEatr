@@ -25,6 +25,7 @@ test.describe("Report and transfer to user", () => {
         exec(
             "dfx --identity local-minter ledger transfer --amount 1 --memo 0 a8caaf21598f17df5a17ce655b3a39298559b76f23ea1b2afddd312d0abb04e8",
         );
+        await page.waitForTimeout(5000); // Wait for ICP transfer confirmation
         await page.getByRole("button", { name: "MINT CREDITS" }).click();
         await page.getByRole("button", { name: "CREATE USER" }).click();
         await page.getByPlaceholder("alphanumeric").fill("joe");
