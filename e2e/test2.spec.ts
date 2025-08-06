@@ -108,15 +108,17 @@ test.describe("Regular users flow", () => {
 
         // Make sure the post is visible on the front page too
         await page.goto("/");
-        
+
         // Look for the article with "Hello world" content
         const postArticle = page.locator("article", { hasText: "Hello world" });
         await expect(postArticle).toBeVisible();
-        
+
         // Check that the edit is rendered properly (markdown **Edit:** becomes <strong>Edit:</strong>)
-        await expect(postArticle.locator("strong", { hasText: "Edit:" })).toBeVisible();
+        await expect(
+            postArticle.locator("strong", { hasText: "Edit:" }),
+        ).toBeVisible();
         await expect(postArticle.getByText("post-scriptum")).toBeVisible();
-        
+
         // Make sure the image is still there
         await expect(postArticle.locator("img")).toBeVisible();
     });
