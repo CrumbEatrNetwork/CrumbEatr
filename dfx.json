@@ -9,7 +9,7 @@
             "metadata": [
                 {
                     "name": "candid:service",
-                    "networks": ["local", "ic"],
+                    "networks": ["local", "ic", "staging"],
                     "visibility": "public"
                 }
             ]
