@@ -193,8 +193,7 @@ impl Default for Allocator {
             boundary: INITIAL_OFFSET,
             mem_size: Some(Box::new(|| stable_size() << 16)),
             mem_grow: Some(Box::new(|n| {
-                stable_grow((n >> 16) + 1)
-                    .map_err(|err| format!("couldn't grow memory: {:?}", err))
+                stable_grow((n >> 16) + 1).map_err(|err| format!("couldn't grow memory: {:?}", err))
             })),
         }
     }
