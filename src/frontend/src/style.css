@@ -106,8 +106,9 @@ h5 {
 
 .monospace *,
 .monospace {
-    font-family: ui-monospace, "Menlo", "Consolas", "Roboto Mono",
-        "DejaVu Sans Mono", monospace;
+    font-family:
+        ui-monospace, "Menlo", "Consolas", "Roboto Mono", "DejaVu Sans Mono",
+        monospace;
 }
 
 .prime .blog_title,

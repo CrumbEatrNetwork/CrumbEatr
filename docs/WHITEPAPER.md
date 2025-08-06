@@ -5,10 +5,10 @@ It operates on the public computing infrastructure powered by the [Internet Comp
 
 ## Key Points
 
--   $name combines features of forums and blogs.
--   $name is tokenized and is owned and governed by its token holders.
--   $name is completely ad-free and generates revenue.
--   $name uses its revenue to reward content producers, token holders (pro-rata) and to cover storage and compute costs.
+- $name combines features of forums and blogs.
+- $name is tokenized and is owned and governed by its token holders.
+- $name is completely ad-free and generates revenue.
+- $name uses its revenue to reward content producers, token holders (pro-rata) and to cover storage and compute costs.
 
 ## Usage Costs
 
@@ -38,11 +38,11 @@ The fee is computed by multiplying `$excess_penalty` with the number of excessiv
 
 ## Rewards and Revenue Distribution
 
--   During positive interactions, users can receive rewards from other users.
--   Rewards are converted to ICP and distributed to users every Friday.
--   Earned rewards points are converted to ICP at the ratio `$credits_per_xdr` rewards / `$usd_per_xdr` USD.
--   Additionally, users owning tokens and being active within the last `$voting_power_activity_weeks` weeks receive a share of $name's revenue proportionate to their token holdings.
--   New rewards received by users with credit balance lower than `$credits_per_xdr` are automatically converted to credits and are used to top up the credit balance of these users.
+- During positive interactions, users can receive rewards from other users.
+- Rewards are converted to ICP and distributed to users every Friday.
+- Earned rewards points are converted to ICP at the ratio `$credits_per_xdr` rewards / `$usd_per_xdr` USD.
+- Additionally, users owning tokens and being active within the last `$voting_power_activity_weeks` weeks receive a share of $name's revenue proportionate to their token holdings.
+- New rewards received by users with credit balance lower than `$credits_per_xdr` are automatically converted to credits and are used to top up the credit balance of these users.
 
 ## Arbiters
 
@@ -54,8 +54,8 @@ They are considered trusted community members, authorized to carry out moderatin
 Realms are sub-communities centered around specific topics.
 Each realm can establish its terms and conditions, breaching which can lead to:
 
--   Flagging of the user's post to arbiters.
--   Moving the post from a realm by the realm controller, incurring penalties.
+- Flagging of the user's post to arbiters.
+- Moving the post from a realm by the realm controller, incurring penalties.
 
 Upon joining a realm, users implicitly agree to its terms and conditions.
 
@@ -67,10 +67,10 @@ Decentralization does not equate to lawlessness!
 Content and behavior permitted on $name aligns with community-approved moderation guidelines.
 Content and behavior not permitted on $name falls into one of the following categories:
 
--   Content and behavior that jeopardize $name as a public service (e.g., those illegal in many jurisdictions).
--   Content or behavior detrimental to the community, sustainability, or decentralization of $name.
--   Content created with malicious intent, such as gaming the $name system.
--   Content and behavior that violate realm-specific rules.
+- Content and behavior that jeopardize $name as a public service (e.g., those illegal in many jurisdictions).
+- Content or behavior detrimental to the community, sustainability, or decentralization of $name.
+- Content created with malicious intent, such as gaming the $name system.
+- Content and behavior that violate realm-specific rules.
 
 This policy is intentionally broad and necessitates social consensus among arbiters.
 
@@ -83,8 +83,8 @@ Whenever a post or user is reported, all arbiters receive notifications and are 
 Once `$report_confirmation_percentage%` of arbiters concur on the report's validity, it is closed.
 For confirmed reports:
 
--   The violating user loses `$reporting_penalty_post` (post report) or `$reporting_penalty_misbehaviour` (user report) rewards, along with an equivalent amount of credits.
--   The reporter receives half of this penalty as rewards.
+- The violating user loses `$reporting_penalty_post` (post report) or `$reporting_penalty_misbehaviour` (user report) rewards, along with an equivalent amount of credits.
+- The reporter receives half of this penalty as rewards.
 
 If arbiters dismiss the report, the reporter loses half the penalty as credits and rewards.
 In both cases, participating arbiters share rewards from the penalty fee, capped at `$arbiter_moderation_reward`.
@@ -104,8 +104,8 @@ This ensures any proposal eventually passes within `100` days.
 
 For any pending proposal, the following holds until it gets adopted, rejected, or cancelled:
 
--   the $$token_symbol tokens of voters who voted on that proposal are locked and cannot be transferred;
--   the rewards and the token minting are deferred for everyone.
+- the $$token_symbol tokens of voters who voted on that proposal are locked and cannot be transferred;
+- the rewards and the token minting are deferred for everyone.
 
 ## Tokenomics
 
@@ -150,18 +150,18 @@ Hence, the last `10%` of the supply will be minted at a ratio of `512:1`.
 
 `20%` of tokens are allocated to the first two users forming an informal bootstrapping team before the tokenization:
 
--   `18%` to @X (founder and the only software developer),
--   `2%` to @mechaquan (growth & marketing).
+- `18%` to @X (founder and the only software developer),
+- `2%` to @mechaquan (growth & marketing).
 
 Tokens are minted weekly, with each user receiving an amount equal to `1%` of the current supply if and only if one of the following conditions are met:
 
--   Their individual share is below `14%` of minted supply.
--   `2/3` of the total supply has been minted.
+- Their individual share is below `14%` of minted supply.
+- `2/3` of the total supply has been minted.
 
 Vesting tokens:
 
--   @mechaquan: `$vesting_tokens_m`
--   @X: `$vesting_tokens_x`
+- @mechaquan: `$vesting_tokens_m`
+- @X: `$vesting_tokens_x`
 
 ## Autonomy
 
@@ -202,13 +202,13 @@ These IDs (canisters or self-authenticating) can call $name's `add_post` method 
 
 Arguments:
 
--   `text`: body text.
--   `vec record {text; blob}`: vector of attached pictures, each tuple containing a blob ID and the blob itself. Tuple requirements:
-    -   ID length < `9` characters.
-    -   Blob < `$max_blob_size_bytes` bytes.
-    -   Pictures referenced from the post by URL `/blob/<id>`.
--   `opt nat64`: parent post ID.
--   `opt text`: realm name.
+- `text`: body text.
+- `vec record {text; blob}`: vector of attached pictures, each tuple containing a blob ID and the blob itself. Tuple requirements:
+    - ID length < `9` characters.
+    - Blob < `$max_blob_size_bytes` bytes.
+    - Pictures referenced from the post by URL `/blob/<id>`.
+- `opt nat64`: parent post ID.
+- `opt text`: realm name.
 
 Note: #IC doesn't support messages > `2Mb`.
 The result of `add_post` contains the new post's ID or an error message.

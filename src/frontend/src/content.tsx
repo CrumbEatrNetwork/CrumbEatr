@@ -205,93 +205,107 @@ const markdownizer = (
                 children={value}
                 remarkPlugins={[remarkGfm]}
                 components={{
-                h1: ({ node, children, ...props }) => {
-                    if (!blogTitle) return <h1 {...props}>{children}</h1>;
-                    let { author, created, length, realm } = blogTitle;
-                    return (
-                        <>
-                            <h1>{children}</h1>
-                            <p className="blog_title medium_text vertically_spaced">
-                                By <a href={`#/journal/${author}`}>{author}</a>
-                                &nbsp;&nbsp;&middot;&nbsp;&nbsp;
-                                <b>{timeAgo(created, true, "long")}</b>
-                                {realm && (
+                    h1: ({ node, children, ...props }) => {
+                        if (!blogTitle) return <h1 {...props}>{children}</h1>;
+                        let { author, created, length, realm } = blogTitle;
+                        return (
+                            <>
+                                <h1>{children}</h1>
+                                <p className="blog_title medium_text vertically_spaced">
+                                    By{" "}
+                                    <a href={`#/journal/${author}`}>{author}</a>
+                                    &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+                                    <b>{timeAgo(created, true, "long")}</b>
+                                    {realm && (
+                                        <>
+                                            &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+                                            <RealmSpan
+                                                name={realm}
+                                                classNameArg="realm_tag"
+                                                styleArg={{
+                                                    borderRadius: "5px",
+                                                }}
+                                            />
+                                        </>
+                                    )}
+                                    &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+                                    {Math.ceil(length / 400)} minutes read
+                                </p>
+                            </>
+                        );
+                    },
+                    a: linkRenderer(preview),
+                    p: ({ node, children, ...props }) => {
+                        const isPic = (c: any) =>
+                            c.type && c.type.name == "img";
+                        if (Array.isArray(children)) {
+                            const pics = children.filter(isPic).length;
+                            if (pics >= 1 && isPic(children[0]))
+                                return <Gallery children={children} />;
+                            else
+                                return (
                                     <>
-                                        &nbsp;&nbsp;&middot;&nbsp;&nbsp;
-                                        <RealmSpan
-                                            name={realm}
-                                            classNameArg="realm_tag"
-                                            styleArg={{ borderRadius: "5px" }}
-                                        />
+                                        {splitParagraphsAndPics(
+                                            children,
+                                            isPic,
+                                        )}
                                     </>
-                                )}
-                                &nbsp;&nbsp;&middot;&nbsp;&nbsp;
-                                {Math.ceil(length / 400)} minutes read
-                            </p>
-                        </>
-                    );
-                },
-                a: linkRenderer(preview),
-                p: ({ node, children, ...props }) => {
-                    const isPic = (c: any) => c.type && c.type.name == "img";
-                    if (Array.isArray(children)) {
-                        const pics = children.filter(isPic).length;
-                        if (pics >= 1 && isPic(children[0]))
-                            return <Gallery children={children} />;
-                        else
-                            return (
-                                <>{splitParagraphsAndPics(children, isPic)}</>
-                            );
-                    } else if (isPic(children))
-                        return <Gallery children={[children]} />;
-                    return <p {...props}>{children}</p>;
-                },
-                img: ({ node, ...props }: any) => {
-                    let srcUrl;
-                    let id: string = props.src;
-                    let internal = false;
-                    if (props.src.startsWith("/blob/")) {
-                        internal = true;
-                        id = props.src.replace("/blob/", "");
-                        if (id in urls) {
-                            props.src = urls[id];
-                        } else {
-                            setDimensions(props);
-                            props.src = fillerImg;
-                        }
-                    } else {
-                        try {
-                            srcUrl = new URL(props.src);
-                        } catch (_) {
-                            return null;
-                        }
-                    }
-                    const element = (
-                        <img
-                            {...props}
-                            onClick={() =>
-                                previewImg(props.src, id, props.gallery, urls)
+                                );
+                        } else if (isPic(children))
+                            return <Gallery children={[children]} />;
+                        return <p {...props}>{children}</p>;
+                    },
+                    img: ({ node, ...props }: any) => {
+                        let srcUrl;
+                        let id: string = props.src;
+                        let internal = false;
+                        if (props.src.startsWith("/blob/")) {
+                            internal = true;
+                            id = props.src.replace("/blob/", "");
+                            if (id in urls) {
+                                props.src = urls[id];
+                            } else {
+                                setDimensions(props);
+                                props.src = fillerImg;
                             }
-                        />
-                    );
-                    return internal || props.thumbnail == "true" ? (
-                        element
-                    ) : (
-                        <div className="text_centered">
-                            {element}
-                            <span className="external_image_bar">
-                                URL:{" "}
-                                <a
-                                    rel="nofollow noopener noreferrer"
-                                    href={props.src}
-                                >
-                                    {srcUrl?.host}
-                                </a>
-                            </span>
-                        </div>
-                    );
-                },
-            }}
+                        } else {
+                            try {
+                                srcUrl = new URL(props.src);
+                            } catch (_) {
+                                return null;
+                            }
+                        }
+                        const element = (
+                            <img
+                                {...props}
+                                onClick={() =>
+                                    previewImg(
+                                        props.src,
+                                        id,
+                                        props.gallery,
+                                        urls,
+                                    )
+                                }
+                            />
+                        );
+                        return internal || props.thumbnail == "true" ? (
+                            element
+                        ) : (
+                            <div className="text_centered">
+                                {element}
+                                <span className="external_image_bar">
+                                    URL:{" "}
+                                    <a
+                                        rel="nofollow noopener noreferrer"
+                                        href={props.src}
+                                    >
+                                        {srcUrl?.host}
+                                    </a>
+                                </span>
+                            </div>
+                        );
+                    },
+                }}
             />
         </div>
     );

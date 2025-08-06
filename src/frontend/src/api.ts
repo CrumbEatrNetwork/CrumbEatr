@@ -155,7 +155,8 @@ export const ApiGenerator = (
         arg4?: unknown,
     ): Promise<T | null> => {
         let effParams = getEffParams([arg0, arg1, arg2, arg3, arg4]);
-        const arg = new TextEncoder().encode(JSON.stringify(effParams)).buffer as ArrayBuffer;
+        const arg = new TextEncoder().encode(JSON.stringify(effParams))
+            .buffer as ArrayBuffer;
 
         const response = await query_raw(undefined, methodName, arg);
         if (!response) {
@@ -218,7 +219,8 @@ export const ApiGenerator = (
         const responseBytes = await call_raw(
             undefined,
             methodName,
-            new TextEncoder().encode(JSON.stringify(effParams)).buffer as ArrayBuffer,
+            new TextEncoder().encode(JSON.stringify(effParams))
+                .buffer as ArrayBuffer,
         );
         if (!responseBytes || !responseBytes.byteLength) {
             return null;
