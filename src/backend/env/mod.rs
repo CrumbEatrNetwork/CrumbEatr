@@ -320,7 +320,7 @@ impl State {
             .and_then(|s| s.module_hash.map(hex::encode))
             .unwrap_or_default();
         mutate(|state| {
-            state.module_hash = current_hash.clone();
+            state.module_hash.clone_from(&current_hash);
             state.logger.debug(format!(
                 "Upgrade succeeded: new version is `{}`.",
                 &current_hash[0..8]
@@ -1469,7 +1469,7 @@ impl State {
                     proposal.proposer, proposal.summary
                 );
 
-                match mutate(|state| {
+                let post_result = mutate(|state| {
                     state.last_nns_proposal = state.last_nns_proposal.max(proposal.id);
                     Post::create(
                         state,
@@ -1485,7 +1485,8 @@ impl State {
                             ..Default::default()
                         })),
                     )
-                }) {
+                });
+                match post_result {
                     Ok(post_id) => {
                         mutate(|state| state.pending_nns_proposals.insert(proposal.id, post_id));
                         continue;
@@ -3335,7 +3336,7 @@ pub(crate) mod tests {
             assert_eq!(state.principals.len(), 2);
 
             assert_eq!(state.principal_to_user(new_principal).unwrap().id, user_id);
-            assert!(state.balances.get(&account(pr(1))).is_none());
+            assert!(!state.balances.contains_key(&account(pr(1))));
             assert_eq!(
                 *state.balances.get(&account(new_principal)).unwrap(),
                 11100 - CONFIG.transaction_fee

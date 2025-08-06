@@ -139,7 +139,7 @@ fn write_at(offset: u64, blob: &[u8], update_pointer: bool) {
 }
 
 fn grow_to_fit(offset: u64, len: u64) {
-    if offset + len < (stable_size() as u64) << 16 {
+    if offset + len < stable_size() << 16 {
         return;
     }
     // amount of extra 64kb pages to reserve
@@ -156,7 +156,7 @@ fn bytes_to_u64(bytes: &[u8], offset: usize) -> u64 {
 }
 
 fn read_blob(offset: u64, len: u64) -> Result<Vec<u8>, &'static str> {
-    if offset.saturating_add(len) > (stable_size() as u64) << 16 {
+    if offset.saturating_add(len) > stable_size() << 16 {
         return Err("blob offset and length are invalid");
     }
     if len > MAX_BLOB_SIZE {
