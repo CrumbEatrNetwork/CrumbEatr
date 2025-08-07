@@ -205,7 +205,7 @@ pub const CONFIG: &Config = &Config {
     user_report_validity_days: 90,
 
     #[cfg(not(any(feature = "dev", feature = "staging")))]
-    nns_voting_enabled: true,
+    nns_voting_enabled: false,
     #[cfg(any(feature = "dev", feature = "staging"))]
     nns_voting_enabled: false,
 

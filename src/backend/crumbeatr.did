@@ -12,7 +12,6 @@ type HttpResponse = record {
 type InsufficientFunds = record { balance : nat };
 type Result = variant { Ok : nat64; Err : text };
 type Result_1 = variant { Ok; Err : text };
-type Result_2 = variant { Ok : text; Err : text };
 type Result_3 = variant { Ok : nat; Err : TransferError };
 type Result_4 = variant { Ok : nat32; Err : text };
 type Standard = record { url : text; name : text };
@@ -47,7 +46,6 @@ service : () -> {
       Result_1,
     );
   force_emergency_upgrade : () -> (bool);
-  get_neuron_info : () -> (Result_2);
   http_request : (HttpRequest) -> (HttpResponse) query;
   http_request_update : (HttpRequest) -> (HttpResponse);
   icrc1_balance_of : (Account) -> (nat) query;

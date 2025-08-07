@@ -2,7 +2,6 @@ use crate::env::{post::archive_cold_posts, user::UserFilter};
 
 use super::*;
 use env::{
-    canisters::get_full_neuron,
     config::CONFIG,
     parse_amount,
     post::{Extension, Post, PostId},
@@ -119,13 +118,6 @@ fn post_upgrade_fixtures() {
 #[update]
 fn prod_release() -> bool {
     true
-}
-
-/// Fetches the full neuron info of the CrumbDAO proving the neuron decentralization
-/// and voting via hot-key capabilities.
-#[update]
-async fn get_neuron_info() -> Result<String, String> {
-    get_full_neuron(CONFIG.neuron_id).await
 }
 
 #[export_name = "canister_update vote_on_poll"]
