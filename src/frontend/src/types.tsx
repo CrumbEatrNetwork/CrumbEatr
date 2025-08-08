@@ -212,7 +212,6 @@ export type User = {
     balance: number;
     cold_balance: number;
     cold_wallet: string;
-    controllers: string[];
     karma_donations: { [key: UserId]: number };
     downvotes: { [key: UserId]: number };
     filters: Filters;
@@ -272,7 +271,6 @@ declare global {
                 canister_cycle_balance: BigInt;
                 module_hash: string;
                 domains: string[];
-                bots: UserId[];
                 weekly_karma_leaders: [UserId, number][];
                 invited_users: number;
                 posts: number;

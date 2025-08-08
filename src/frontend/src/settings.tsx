@@ -12,7 +12,6 @@ export const Settings = ({ invite }: { invite?: string }) => {
     const [settings, setSettings] = React.useState<{ [name: string]: string }>(
         {},
     );
-    const [controllers, setControllers] = React.useState("");
     const [label, setLabel] = React.useState(null);
     const [timer, setTimer] = React.useState<any>();
     const [uiRefresh, setUIRefresh] = React.useState(false);
@@ -30,7 +29,6 @@ export const Settings = ({ invite }: { invite?: string }) => {
         if (!user) return;
         setName(user.name);
         setAbout(user.about);
-        setControllers(user.controllers.join("\n"));
         setSettings(user.settings);
         setGovernance(user.governance.toString());
         setShowPostsInRealms(user.show_posts_in_realms.toString());
@@ -90,16 +88,11 @@ export const Settings = ({ invite }: { invite?: string }) => {
             )
                 return;
         }
-        const principal_ids = controllers
-            .split("\n")
-            .map((v) => v.trim())
-            .filter((id) => id.length > 0);
         const responses = await Promise.all([
             window.api.call<any>(
                 "update_user",
                 nameChange ? name : "",
                 about,
-                principal_ids,
                 userFilter,
                 governance == "true",
                 showPostsInRealms == "true",
@@ -230,17 +223,6 @@ export const Settings = ({ invite }: { invite?: string }) => {
                             <option value="on">ON</option>
                             <option value="off">OFF</option>
                         </select>
-                        <div className="bottom_half_spaced">
-                            Controller principal (one per line)
-                        </div>
-                        <textarea
-                            className="small_text bottom_spaced"
-                            value={controllers}
-                            onChange={(event) =>
-                                setControllers(event.target.value)
-                            }
-                            rows={4}
-                        ></textarea>
                         <h3>Noise filter</h3>
                         <div className="stands_out">
                             <p>The noise filters define:</p>

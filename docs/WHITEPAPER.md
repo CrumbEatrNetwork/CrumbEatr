@@ -195,10 +195,7 @@ $name DAO commits to:
 
 ## Bots
 
-$name users can become bots by adding principal IDs in account settings.
-These IDs (canisters or self-authenticating) can call $name's `add_post` method in Candid format as follows:
-
-    "add_post": (text, vec record { text; blob }, opt nat64, opt text) -> (variant { Ok: nat64; Err: text });
+Bot functionality has been removed from CrumbEatr to simplify the platform and reduce complexity. Users can only post through authenticated principals.
 
 Arguments:
 

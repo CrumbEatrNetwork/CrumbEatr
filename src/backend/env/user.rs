@@ -87,7 +87,6 @@ pub struct User {
     messages: u64,
     pub last_activity: u64,
     pub arbiter: bool,
-    pub controllers: Vec<String>,
     pub invited_by: Option<UserId>,
     pub accounting: VecDeque<(Time, String, i64, String)>,
     pub realms: Vec<String>,
@@ -160,7 +159,6 @@ impl User {
             followees: vec![id].into_iter().collect(),
             followers: Default::default(),
             accounting: Default::default(),
-            controllers: Default::default(),
             last_activity: timestamp,
             arbiter: false,
             invited_by: None,
@@ -266,9 +264,6 @@ impl User {
     }
 
     fn insert_notifications(&mut self, notification: Notification) {
-        if self.is_bot() {
-            return;
-        }
         self.messages += 1;
         self.notifications
             .insert(self.messages, (notification, false));
@@ -369,10 +364,6 @@ impl User {
             })
             .unwrap_or_else(|| Notification::WatchedPostEntries(post_id, vec![comment]));
         self.insert_notifications(notification);
-    }
-
-    pub fn is_bot(&self) -> bool {
-        self.controllers.iter().any(|p| p.len() == 27)
     }
 
     pub fn change_credits<T: ToString>(
@@ -486,25 +477,10 @@ impl User {
         caller: Principal,
         new_name: Option<String>,
         about: String,
-        principals: Vec<String>,
         filter: UserFilter,
         governance: bool,
         show_posts_in_realms: bool,
     ) -> Result<(), String> {
-        if read(|state| {
-            state
-                .users
-                .values()
-                .filter(|user| user.principal != caller)
-                .flat_map(|user| user.controllers.iter())
-                .collect::<BTreeSet<_>>()
-                .intersection(&principals.iter().collect())
-                .count()
-        }) > 0
-        {
-            return Err("controller already assigned to another user".into());
-        }
-
         mutate(|state| {
             let user = state.principal_to_user(caller).ok_or("user not found")?;
             if !User::valid_info(&about, &user.settings) {
@@ -521,7 +497,6 @@ impl User {
             }
             if let Some(user) = state.principal_to_user_mut(caller) {
                 user.about = about;
-                user.controllers = principals;
                 user.governance = governance;
                 user.filters.noise = filter;
                 user.show_posts_in_realms = show_posts_in_realms;

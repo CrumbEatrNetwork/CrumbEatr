@@ -73,7 +73,6 @@ pub struct Stats {
     last_daily_chores: u64,
     last_hourly_chores: u64,
     arbiters: Vec<UserId>,
-    bots: Vec<UserId>,
     state_size: u64,
     active_users: usize,
     invited_users: usize,
@@ -1550,7 +1549,7 @@ impl State {
                 user.active_weeks = 0;
             }
             let inactive = !user.active_within_weeks(now, CONFIG.inactivity_duration_weeks);
-            if inactive || user.is_bot() {
+            if inactive {
                 user.notifications.clear();
                 user.accounting.clear();
             }
@@ -1619,7 +1618,6 @@ impl State {
 
         for u in users {
             if !u.governance
-                || u.is_bot()
                 || u.controversial()
                 || now.saturating_sub(u.timestamp)
                     < WEEK * CONFIG.min_arbiter_account_age_weeks as u64
@@ -2028,7 +2026,6 @@ impl State {
         let mut users_online = 0;
         let mut invited_users = 0;
         let mut active_users = 0;
-        let mut bots = Vec::new();
         let mut credits = 0;
         for user in self.users.values() {
             if user.arbiter {
@@ -2036,9 +2033,6 @@ impl State {
             }
             if now < user.last_activity + CONFIG.online_activity_minutes {
                 users_online += 1;
-            }
-            if user.is_bot() {
-                bots.push(user.id);
             }
             if user.invited_by.is_some() {
                 invited_users += 1;
@@ -2094,7 +2088,6 @@ impl State {
             account: invoices::main_account().to_string(),
             users_online,
             arbiters: arbiters.into_iter().map(|u| u.id).collect(),
-            bots,
             state_size: stable_size() << 16,
             invited_users,
             active_users,
@@ -2887,7 +2880,6 @@ pub(crate) mod tests {
             pr(1),
             Some("john".into()),
             Default::default(),
-            vec![],
             Default::default(),
             false,
             false
@@ -2899,7 +2891,6 @@ pub(crate) mod tests {
             pr(0),
             Some("john".into()),
             Default::default(),
-            vec![],
             Default::default(),
             false,
             false

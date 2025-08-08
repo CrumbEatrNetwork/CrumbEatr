@@ -445,23 +445,8 @@ impl Post {
     ) -> Result<PostId, String> {
         let user = match state.principal_to_user(principal) {
             Some(user) => user,
-            // look for an authorized controller
-            None => {
-                let controller_id = principal.to_string();
-                match state
-                    .users
-                    .values()
-                    .find(|u| u.controllers.contains(&controller_id))
-                {
-                    Some(user) => user,
-                    None => return Err(format!("no user with controller {} found", controller_id)),
-                }
-            }
+            None => return Err("no user found".into()),
         };
-
-        if user.is_bot() && parent.is_some() {
-            return Err("bots can't create comments".into());
-        }
 
         let realm = match parent.and_then(|id| Post::get(state, &id)) {
             Some(parent) => parent.realm.clone(),
