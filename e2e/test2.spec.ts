@@ -110,7 +110,9 @@ test.describe("Regular users flow", () => {
         await page.goto("/");
 
         // Look for the article with "Hello world!" content
-        const postArticle = page.locator("article", { hasText: "Hello world!" });
+        const postArticle = page.locator("article", {
+            hasText: "Hello world!",
+        });
         await expect(postArticle).toBeVisible();
 
         // Check that the edit is rendered properly (markdown **Edit:** becomes <strong>Edit:</strong>)
