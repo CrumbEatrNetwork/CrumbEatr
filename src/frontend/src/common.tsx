@@ -575,6 +575,7 @@ export const IconToggleButton = ({
     pressed,
     classNameArg,
     testId = null,
+    styleArg,
 }: {
     title?: string;
     icon: any;
@@ -582,6 +583,7 @@ export const IconToggleButton = ({
     pressed?: boolean;
     classNameArg?: string;
     testId?: any;
+    styleArg?: { [name: string]: string };
 }) => (
     <button
         title={title}
@@ -594,6 +596,7 @@ export const IconToggleButton = ({
         className={`${
             pressed ? "" : "un"
         }selected reaction_button vcentered ${classNameArg}`}
+        style={styleArg}
     >
         {icon}
     </button>
@@ -624,6 +627,7 @@ export const BurgerButton = ({
             pressed={pressed}
             icon={<Menu styleArg={effStyle} />}
             testId={testId}
+            styleArg={effStyle}
         />
     );
 };
