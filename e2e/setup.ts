@@ -8,17 +8,18 @@ export default async function setup(): Promise<void> {
     try {
         console.log("Adding controller to canister...");
         exec(
-            "dfx canister update-settings crumbeatr --add-controller " + canisterId,
+            "dfx canister update-settings crumbeatr --add-controller " +
+                canisterId,
         );
         console.log("Controller added successfully");
 
         console.log("Calling reset on canister...");
         exec("dfx canister call crumbeatr reset");
         console.log("Reset called successfully");
-        
+
         // Wait a bit to ensure the reset has fully processed
         console.log("Waiting for reset to complete...");
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
         console.error("Setup error:", error);
         throw error;
