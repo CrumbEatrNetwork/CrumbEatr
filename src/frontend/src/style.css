@@ -531,6 +531,9 @@ hr {
     background: none;
     border: 2px solid #000000;
 }
+.inbox.feed_item button.unselected {
+    border: none;
+}
 
 /* All tab-style buttons should always be slanted */
 .text_centered.vertically_spaced button {
