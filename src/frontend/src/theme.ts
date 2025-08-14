@@ -69,7 +69,7 @@ const themes: { [name: string]: Theme } = {
 };
 
 const applyTheme = (palette: Theme) => {
-    const effPalette: Theme = palette ? palette : themes["dark"];
+    const effPalette: Theme = palette ? palette : themes["black"];
     effPalette.light_background =
         "#" + shade(effPalette.background, effPalette.light_factor || 3);
     effPalette.dark_background =
