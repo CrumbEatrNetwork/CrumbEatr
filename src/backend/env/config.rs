@@ -316,7 +316,7 @@ pub const CONFIG: &Config = &Config {
         (51, 10),
         (50, 10),
         // thumb down
-        // star, pirate
+        // star, infinity
         (100, 20),
         (101, 20),
         (1, -3),

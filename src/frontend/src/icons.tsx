@@ -781,7 +781,7 @@ export const reaction2icon = (id: number) => {
         case 100:
             return <>⭐️</>;
         case 101:
-            return <>🏴‍☠️</>;
+            return <>♾️</>;
         case 10:
             return <>❤️</>;
         case 11:
