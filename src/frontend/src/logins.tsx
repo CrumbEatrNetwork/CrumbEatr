@@ -17,6 +17,52 @@ const isSecurePassword = (password: string): boolean =>
         password,
     ) || !MAINNET_MODE;
 
+// Password authentication method - only available in development
+const passwordMethod = !MAINNET_MODE
+    ? {
+          icon: <Incognito />,
+          label: "PASSWORD",
+          description:
+              "This authentication method works on any device and only requires you to memorize one password.",
+          login: async (
+              confirmationRequired?: boolean,
+          ): Promise<JSX.Element> => (
+              <SeedPhraseForm
+                  classNameArg="spaced"
+                  callback={async (password: string) => {
+                      if (!password) return;
+                      let seed = await hash(password, HASH_ITERATIONS);
+                      let identity = Ed25519KeyIdentity.generate(seed);
+                      const result = await migrateIfNeeded(password);
+                      if (result) {
+                          identity = result;
+                      } else if (
+                          !isSecurePassword(password) &&
+                          !(await window.api.query("user", [
+                              identity.getPrincipal().toString(),
+                          ])) &&
+                          !confirm(
+                              "Your password is insecure and will eventually be guessed. " +
+                                  "A secure password should contain at least 8 symbols such as " +
+                                  "uppercase and lowercase letters, symbols and digits. " +
+                                  "Do you want to continue with an insecure password?",
+                          )
+                      ) {
+                          return;
+                      }
+                      let serializedIdentity = JSON.stringify(
+                          identity.toJSON(),
+                      );
+                      localStorage.setItem("IDENTITY", serializedIdentity);
+                      localStorage.setItem("SEED_PHRASE", "true");
+                      location.reload();
+                  }}
+                  confirmationRequired={confirmationRequired}
+              />
+          ),
+      }
+    : null;
+
 export const authMethods = [
     {
         icon: <Ticket />,
@@ -57,44 +103,7 @@ export const authMethods = [
             return null;
         },
     },
-    {
-        icon: <Incognito />,
-        label: "PASSWORD",
-        description:
-            "This authentication method works on any device and only requires you to memorize one password.",
-        login: async (confirmationRequired?: boolean): Promise<JSX.Element> => (
-            <SeedPhraseForm
-                classNameArg="spaced"
-                callback={async (password: string) => {
-                    if (!password) return;
-                    let seed = await hash(password, HASH_ITERATIONS);
-                    let identity = Ed25519KeyIdentity.generate(seed);
-                    const result = await migrateIfNeeded(password);
-                    if (result) {
-                        identity = result;
-                    } else if (
-                        !isSecurePassword(password) &&
-                        !(await window.api.query("user", [
-                            identity.getPrincipal().toString(),
-                        ])) &&
-                        !confirm(
-                            "Your password is insecure and will eventually be guessed. " +
-                                "A secure password should contain at least 8 symbols such as " +
-                                "uppercase and lowercase letters, symbols and digits. " +
-                                "Do you want to continue with an insecure password?",
-                        )
-                    ) {
-                        return;
-                    }
-                    let serializedIdentity = JSON.stringify(identity.toJSON());
-                    localStorage.setItem("IDENTITY", serializedIdentity);
-                    localStorage.setItem("SEED_PHRASE", "true");
-                    location.reload();
-                }}
-                confirmationRequired={confirmationRequired}
-            />
-        ),
-    },
+    ...(passwordMethod ? [passwordMethod] : []),
 ];
 
 export const logout = () => {

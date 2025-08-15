@@ -359,7 +359,7 @@ export const Settings = ({ invite }: { invite?: string }) => {
                         <ol>
                             <li>
                                 Log in using the new authentication method (a
-                                new II anchor or a password).
+                                new II anchor).
                             </li>
                             <li>
                                 Copy the displayed principal and log out again{" "}

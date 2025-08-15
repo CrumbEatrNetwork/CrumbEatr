@@ -193,6 +193,7 @@ fn update_last_activity() {
 }
 
 // migration method from the password login to many iterations login
+#[cfg(feature = "dev")]
 #[export_name = "canister_update migrate"]
 fn migrate() {
     let principal: String = parse(&arg_data_raw());

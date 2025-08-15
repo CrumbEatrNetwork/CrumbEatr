@@ -21,7 +21,7 @@ import * as React from "react";
 import { LoginMasks, logout, SeedPhraseForm } from "./logins";
 import { Ed25519KeyIdentity } from "@dfinity/identity";
 import { Principal } from "@dfinity/principal";
-import { CANISTER_ID } from "./env";
+import { CANISTER_ID, MAINNET_MODE } from "./env";
 
 type Invoice = { paid: boolean; e8s: BigInt; account: number[] };
 
@@ -44,7 +44,9 @@ export const Welcome = () => {
     };
 
     const passwordConfirmationRequired =
-        !!localStorage.getItem("SEED_PHRASE") && !seedPhraseConfirmed;
+        !MAINNET_MODE &&
+        !!localStorage.getItem("SEED_PHRASE") &&
+        !seedPhraseConfirmed;
     const logOutButton = (
         <button className="right_spaced" onClick={() => logout()}>
             LOGOUT
