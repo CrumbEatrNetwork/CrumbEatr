@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
   <!-- CrumbEatr favicon: Simple "C" with crumb dots -->
-  <rect width="32" height="32" fill="#1e1e23"/>
+  <rect width="32" height="32" fill="#000000"/>
   
   <!-- "C" shape in brand green -->
   <path fill="#4CB381" d="M8 6 C6 6 4 8 4 10 L4 22 C4 24 6 26 8 26 L18 26 L18 22 L10 22 L10 10 L22 10 L22 6 Z"/>
