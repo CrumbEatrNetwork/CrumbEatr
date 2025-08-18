@@ -170,46 +170,6 @@ It autonomously creates new storage canisters when space runs out.
 $name tops up canisters with low credits using ICP from the Treasury.
 The [dashboard](/#/dashboard) provides information on system status and past events.
 
-## The CrumbEatr Network Neuron
-
-$name DAO votes on NNS proposals with neuron [$neuron_id](http://dashboard.internetcomputer.org/neuron/$neuron_id) and doesn't follow anyone.
-
-#### Neuron Decentralization
-
-The neuron is only controlled by $name's canister as the assigned neuron's controller lacks a known secret key.
-The $name canister votes via the hot-key mechanism.
-$name canister's `get_neuron_info` method confirms this:
-
-    dfx canister --network ic call $canister_id get_neuron_info
-
-#### Voting
-
-Proposals categorized as "Governance", "Network Economics", "Replica Version Management," and "SNS & Community Fund" are displayed as posts with polls.
-$name canister votes on these proposals after 3 days, weighted by voters' token balances.
-
-Other proposals are automatically rejected.
-$name DAO commits to:
-
-1. Attract voters to other topics over time.
-2. Find followees or vote themselves if automated rejection harms #IC.
-
-## Bots
-
-Bot functionality has been removed from CrumbEatr to simplify the platform and reduce complexity. Users can only post through authenticated principals.
-
-Arguments:
-
-- `text`: body text.
-- `vec record {text; blob}`: vector of attached pictures, each tuple containing a blob ID and the blob itself. Tuple requirements:
-    - ID length < `9` characters.
-    - Blob < `$max_blob_size_bytes` bytes.
-    - Pictures referenced from the post by URL `/blob/<id>`.
-- `opt nat64`: parent post ID.
-- `opt text`: realm name.
-
-Note: #IC doesn't support messages > `2Mb`.
-The result of `add_post` contains the new post's ID or an error message.
-
 ## Code and Bug Bounty
 
 $name's [code](https://github.com/CrumbEatrNetwork/CrumbEatr) is open source, under GPL license.
