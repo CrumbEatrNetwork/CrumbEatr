@@ -127,7 +127,7 @@ export const Inbox = () => {
             />
             {fresh.length == 0 && (
                 <h1 className="text_centered vertically_spaced">
-                    Inbox Zero Achieved! 🚀
+                    Inbox Zero Achieved! 🛸
                 </h1>
             )}
             {fresh.map((id) => displayEntry(Number(id)))}
