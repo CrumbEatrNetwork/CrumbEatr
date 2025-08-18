@@ -2,7 +2,7 @@ import * as React from "react";
 import { PostFeed } from "./post_feed";
 import { Search } from "./search";
 import { bigScreen, currentRealm, Loading } from "./common";
-import { New, User, Bars, Gem, Balloon, Document, Fire, Realm } from "./icons";
+import { New, User, Bars, Gem, Infinity, Document, Fire, Realm } from "./icons";
 import { PostId } from "./types";
 
 export const Landing = () => {
@@ -183,7 +183,7 @@ export const Links = ({}) => {
                 <Bars /> DASHBOARD
             </a>
             <a title="PROPOSALS" className="icon_link" href="/#/proposals">
-                <Balloon /> PROPOSALS
+                <Infinity /> PROPOSALS
             </a>
             <a title="TOKENS" className="icon_link" href="/#/tokens">
                 <Gem /> TOKENS
