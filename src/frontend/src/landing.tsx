@@ -61,9 +61,7 @@ export const Landing = () => {
             {!user && !realm && (
                 <div className="spaced vertically_spaced text_centered">
                     <h1>ENTER</h1>
-                    <span>
-                        Your content. Your community. Your Platform.
-                    </span>
+                    <span>Your content. Your community. Your Platform.</span>
                 </div>
             )}
             {!user && <Links />}

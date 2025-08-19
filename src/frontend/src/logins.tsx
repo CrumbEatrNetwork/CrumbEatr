@@ -81,8 +81,7 @@ export const authMethods = [
     {
         icon: <Infinity />,
         label: "INTERNET IDENTITY",
-        description:
-            "Enter with Internet Identity — your decentralized key",
+        description: "Enter with Internet Identity — your decentralized key",
         login: () => {
             if (
                 (location.href.includes(".raw") ||
