@@ -90,7 +90,7 @@ test.describe("Upgrades & token transfer flow", () => {
                 if (
                     dialog.message().includes("Enter the recipient principal")
                 ) {
-                    await dialog.accept("6qfxa-ryaaa-aaaai-qbhsq-cai");
+                    await dialog.accept("przbn-baaaa-aaaaj-qnshq-cai");
                 }
                 if (dialog.message().includes("Enter the amount")) {
                     await dialog.accept("5");

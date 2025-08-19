@@ -157,7 +157,7 @@ test.describe("Regular users flow", () => {
                             "Enter the recipient principal or ICP account address",
                         )
                 ) {
-                    await dialog.accept("6qfxa-ryaaa-aaaai-qbhsq-cai");
+                    await dialog.accept("przbn-baaaa-aaaaj-qnshq-cai");
                 }
                 if (
                     dialog

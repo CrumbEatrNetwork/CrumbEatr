@@ -149,16 +149,11 @@ mod string {
 pub const CONFIG: &Config = &Config {
     name: "CrumbEatr",
     domains: &[
-        "crumbeatr.link",
-        "crumbeatr.network",
-        "crumbeatr.club",
-        "crumbeatr.blog",
-        "crumbeatr.wtf",
-        "6qfxa-ryaaa-aaaai-qbhsq-cai.icp0.io",
-        "6qfxa-ryaaa-aaaai-qbhsq-cai.ic0.app",
+        "przbn-baaaa-aaaaj-qnshq-cai.icp0.io",
+        "przbn-baaaa-aaaaj-qnshq-cai.ic0.app",
     ],
     logo: include_str!("../../frontend/assets/logo.min.svg"),
-    staging: "e4i5g-biaaa-aaaao-ai7ja-cai.icp0.io",
+    staging: "ky6sq-aaaaa-aaaaj-a2fsa-cai.icp0.io",
 
     #[cfg(not(feature = "staging"))]
     token_symbol: "CRUMB",
