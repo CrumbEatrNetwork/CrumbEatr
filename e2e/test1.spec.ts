@@ -110,9 +110,9 @@ test.describe("Upgrades & token transfer flow", () => {
 
         await expect(page.getByTestId("token-balance")).toHaveText("14.75");
         await page.getByTestId("token-balance").click();
-        await page.getByRole("link", { name: "6qfxa" }).click();
+        await page.getByRole("link", { name: "przbn" }).click();
         await expect(
-            page.getByRole("heading", { name: "TRANSACTIONS OF 6QFXA" }),
+            page.getByRole("heading", { name: "TRANSACTIONS OF PRZBN" }),
         ).toBeVisible();
         await expect(
             page.getByRole("heading", { name: "BALANCE: 5.00 CRUMB" }),
