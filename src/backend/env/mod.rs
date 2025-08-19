@@ -788,7 +788,7 @@ impl State {
         }
         let id = self.new_user_id();
         let mut user = User::new(principal, id, timestamp, name);
-        user.notify(format!("**Welcome!** 🎉 Use #{} as your personal blog, micro-blog or a photo blog. Use #hashtags to connect with others. Make sure you understand [how {0} works](/#/whitepaper). And finally, [say hello](#/new) and start earning rewards!", CONFIG.name));
+        user.notify(format!("**Welcome!** 😎 Use #{} as your personal blog, micro-blog or a photo blog. Use #hashtags to connect with others. Make sure you understand [how {0} works](/#/whitepaper). And finally, [say hello](#/new) and start earning rewards!", CONFIG.name));
         if let Some(credits) = credits {
             user.change_credits(credits, CreditsDelta::Plus, "topped up by an invite")
                 .expect("couldn't add credits when creating a new user");
