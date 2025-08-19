@@ -60,9 +60,9 @@ export const Landing = () => {
         <>
             {!user && !realm && (
                 <div className="spaced vertically_spaced text_centered">
-                    <h1>WELCOME ABOARD</h1>
+                    <h1>ENTER</h1>
                     <span>
-                        To the Future of Decentralized Social Networking.
+                        Your content. Your community. Your Platform.
                     </span>
                 </div>
             )}

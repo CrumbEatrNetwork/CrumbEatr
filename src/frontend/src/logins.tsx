@@ -23,7 +23,7 @@ const passwordMethod = !MAINNET_MODE
           icon: <Incognito />,
           label: "PASSWORD",
           description:
-              "This authentication method works on any device and only requires you to memorize one password.",
+              "Only requires you to memorize one password (development only).",
           login: async (
               confirmationRequired?: boolean,
           ): Promise<JSX.Element> => (
@@ -67,7 +67,7 @@ export const authMethods = [
     {
         icon: <Ticket />,
         label: "INVITE",
-        description: "Start here if you got an invite code!",
+        description: "Enter here if you received an invite code",
         login: async () => {
             const code = prompt("Enter your invite code:")?.toLowerCase();
             if (!(await window.api.query("check_invite", code))) {
@@ -82,7 +82,7 @@ export const authMethods = [
         icon: <Infinity />,
         label: "INTERNET IDENTITY",
         description:
-            "This authentication method is provided by the Internet Computer protocol and works well with any modern device supporting a biometric authentication.",
+            "Enter with Internet Identity — your decentralized key",
         login: () => {
             if (
                 (location.href.includes(".raw") ||
