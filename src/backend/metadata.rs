@@ -8,7 +8,7 @@ pub fn set_index_metadata(body: &[u8]) -> Vec<u8> {
         domain,
         "",
         CONFIG.name,
-        "The first FULLY decentralized social network powered by the Internet Computer.",
+        "Break free from the algorithm.",
         "website",
     )
 }
