@@ -3,10 +3,10 @@ import { test, expect } from "@playwright/test";
 test("Sanity check", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByRole("heading", { name: "WELCOME ABOARD" }).click();
+    await page.getByRole("heading", { name: "ENTER" }).click();
     await expect(page).toHaveTitle("CRUMBEATR");
     await expect(
-        page.getByText("To the Future of Decentralized Social Networking"),
+        page.getByText("Your content. Your community. Your Platform."),
     ).toBeVisible();
 });
 
