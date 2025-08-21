@@ -377,8 +377,6 @@ const Footer = ({}) => (
             &#10045; <a href="#/post/0">2025</a>
             <span className="left_half_spaced right_half_spaced">&middot;</span>
             <a href={location.origin}>{location.host.toLowerCase()}</a>
-            <span className="left_half_spaced right_half_spaced">&middot;</span>
-            <a href="https://github.com/CrumbEatrNetwork/CrumbEatr">GitHub</a>
         </>
     </footer>
 );
