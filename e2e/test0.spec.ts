@@ -6,7 +6,7 @@ test("Sanity check", async ({ page }) => {
     await page.getByRole("heading", { name: "ENTER" }).click();
     await expect(page).toHaveTitle("CRUMBEATR");
     await expect(
-        page.getByText("Your content. Your community. Your Platform."),
+        page.getByText("Break free from the algorithm."),
     ).toBeVisible();
 });
 
