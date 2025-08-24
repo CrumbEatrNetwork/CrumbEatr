@@ -12,6 +12,7 @@ All modifications listed below have been made under the terms of GPL v3.0, prese
 
 ### August 24, 2025
 
+- **User Reference Updates**: Updated team member references throughout codebase - changed developer reference from "X" to "Y" and growth & marketing member from "mechaquan" to "SubZero" across whitepaper, backend minting logic, frontend token display, and test assertions
 - **Internet Identity 2.0 Upgrade**: Updated authentication system from Internet Identity 1.0 to 2.0, changing identity provider URL from `https://identity.ic0.app` to `https://id.ai` for production and staging deployments. This enables improved user experience with Google login support, elimination of anchor numbers for new users, and enhanced passkey authentication flows.
 
 ### August 19-21, 2025

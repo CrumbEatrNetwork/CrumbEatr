@@ -150,8 +150,8 @@ Hence, the last `10%` of the supply will be minted at a ratio of `512:1`.
 
 `20%` of tokens are allocated to the first two users forming an informal bootstrapping team before the tokenization:
 
-- `18%` to @X (founder and the only software developer),
-- `2%` to @mechaquan (growth & marketing).
+- `18%` to @Y (founder and the only software developer),
+- `2%` to @SubZero (growth & marketing).
 
 Tokens are minted weekly, with each user receiving an amount equal to `1%` of the current supply if and only if one of the following conditions are met:
 
@@ -160,8 +160,8 @@ Tokens are minted weekly, with each user receiving an amount equal to `1%` of th
 
 Vesting tokens:
 
-- @mechaquan: `$vesting_tokens_m`
-- @X: `$vesting_tokens_x`
+- @SubZero: `$vesting_tokens_s`
+- @Y: `$vesting_tokens_y`
 
 ## Autonomy
 

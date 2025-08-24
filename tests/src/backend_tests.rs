@@ -215,9 +215,9 @@ fn test_upgrade_from_snapshot() {
     let old_users = users(&pic, backend, controller());
     assert!(old_users.len() >= 4000);
     assert_eq!(old_users[0].as_array().unwrap()[0].as_u64().unwrap(), 0);
-    assert_eq!(old_users[0].as_array().unwrap()[1].as_str().unwrap(), "X");
+    assert_eq!(old_users[0].as_array().unwrap()[1].as_str().unwrap(), "Y");
 
-    let old_posts = journal(&pic, backend, controller(), "X");
+    let old_posts = journal(&pic, backend, controller(), "Y");
     assert!(old_posts.len() >= 10);
 
     pic.upgrade_canister(
@@ -237,6 +237,6 @@ fn test_upgrade_from_snapshot() {
     let new_users = users(&pic, backend, controller());
     assert_eq!(old_users, new_users);
 
-    let new_posts = journal(&pic, backend, controller(), "X");
+    let new_posts = journal(&pic, backend, controller(), "Y");
     assert_eq!(old_posts, new_posts);
 }
