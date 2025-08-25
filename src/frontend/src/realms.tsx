@@ -35,7 +35,7 @@ export const RealmForm = ({ existingName }: { existingName?: string }) => {
     const [theme, setTheme] = React.useState<Theme>();
     const [name, setName] = React.useState("");
     const [realm, setRealm] = React.useState<Realm>({
-        cleanup_penalty: 10,
+        cleanup_penalty: 0,
         controllers: [userId],
         description: "",
         filter: {
@@ -237,12 +237,12 @@ export const RealmForm = ({ existingName }: { existingName?: string }) => {
                     <input
                         type="number"
                         min="0"
-                        value={cleanup_penalty === 10 ? "" : cleanup_penalty}
-                        placeholder="10"
+                        value={cleanup_penalty || ""}
+                        placeholder="0"
                         onChange={(e) => {
                             const val = e.target.value;
                             realm.cleanup_penalty =
-                                val === "" ? 10 : Number(val);
+                                val === "" ? 0 : Number(val);
                             setRealm({ ...realm });
                         }}
                         id="own_theme"
