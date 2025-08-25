@@ -1372,7 +1372,7 @@ impl State {
                 state.logger.info("An emergency release is pending! 🚨");
             }
 
-            state.recompute_arbiters(now);
+            // state.recompute_arbiters(now);
 
             for user in state.users.values_mut() {
                 user.downvotes.retain(|_, timestamp| {
