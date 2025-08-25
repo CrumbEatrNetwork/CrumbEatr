@@ -922,7 +922,7 @@ button.active {
     margin-right: 1rem;
 }
 .right_half_spaced {
-    margin-right: 0.5rem;
+    margin-right: 0.25rem;
 }
 
 .right_quarter_spaced {
@@ -938,7 +938,7 @@ button.active {
 }
 
 .left_half_spaced {
-    margin-left: 0.5rem;
+    margin-left: 0.25rem;
 }
 
 .bottom_half_spaced {
