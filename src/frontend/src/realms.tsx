@@ -237,9 +237,12 @@ export const RealmForm = ({ existingName }: { existingName?: string }) => {
                     <input
                         type="number"
                         min="0"
-                        value={cleanup_penalty}
+                        value={cleanup_penalty === 10 ? "" : cleanup_penalty}
+                        placeholder="10"
                         onChange={(e) => {
-                            realm.cleanup_penalty = Number(e.target.value);
+                            const val = e.target.value;
+                            realm.cleanup_penalty =
+                                val === "" ? 10 : Number(val);
                             setRealm({ ...realm });
                         }}
                         id="own_theme"
@@ -347,11 +350,12 @@ export const RealmForm = ({ existingName }: { existingName?: string }) => {
                             <input
                                 type="number"
                                 min="0"
-                                value={filter.balance}
+                                value={filter.balance || ""}
+                                placeholder="0"
                                 onChange={(e) => {
-                                    realm.filter.balance = Number(
-                                        e.target.value,
-                                    );
+                                    const val = e.target.value;
+                                    realm.filter.balance =
+                                        val === "" ? 0 : Number(val);
                                     setRealm({ ...realm });
                                 }}
                                 id="own_theme"
@@ -364,11 +368,12 @@ export const RealmForm = ({ existingName }: { existingName?: string }) => {
                             <input
                                 type="number"
                                 min="0"
-                                value={filter.age_days}
+                                value={filter.age_days || ""}
+                                placeholder="0"
                                 onChange={(e) => {
-                                    realm.filter.age_days = Number(
-                                        e.target.value,
-                                    );
+                                    const val = e.target.value;
+                                    realm.filter.age_days =
+                                        val === "" ? 0 : Number(val);
                                     setRealm({ ...realm });
                                 }}
                                 id="own_theme"
@@ -381,11 +386,12 @@ export const RealmForm = ({ existingName }: { existingName?: string }) => {
                             <input
                                 type="number"
                                 min="0"
-                                value={filter.num_followers}
+                                value={filter.num_followers || ""}
+                                placeholder="0"
                                 onChange={(e) => {
-                                    realm.filter.num_followers = Number(
-                                        e.target.value,
-                                    );
+                                    const val = e.target.value;
+                                    realm.filter.num_followers =
+                                        val === "" ? 0 : Number(val);
                                     setRealm({ ...realm });
                                 }}
                                 id="own_theme"
@@ -403,11 +409,12 @@ export const RealmForm = ({ existingName }: { existingName?: string }) => {
                             <input
                                 type="number"
                                 min="0"
-                                value={realm.filter.downvotes}
+                                value={realm.filter.downvotes || ""}
+                                placeholder="0"
                                 onChange={(e) => {
-                                    realm.filter.downvotes = Number(
-                                        e.target.value,
-                                    );
+                                    const val = e.target.value;
+                                    realm.filter.downvotes =
+                                        val === "" ? 0 : Number(val);
                                     setRealm({ ...realm });
                                 }}
                                 id="own_theme"
