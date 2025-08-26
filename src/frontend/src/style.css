@@ -1137,9 +1137,9 @@ label svg {
 
     .feed_item {
         border: none;
-        border-top: 1px solid $frame;
+        border-top: 2px solid $frame;
         padding-top: 1em;
-        margin-bottom: 0.5em;
+        margin-bottom: 0.2em;
     }
 
     .popup_body {
