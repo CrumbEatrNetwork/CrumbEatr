@@ -36,7 +36,7 @@ test.describe("Regular users flow", () => {
             .getByPlaceholder("tell us what we should know about you")
             .fill("I am a #CrumbEatr fan");
         await page.getByRole("button", { name: "SAVE" }).click();
-        await expect(page).toHaveTitle("CRUMBEATR");
+        await expect(page).toHaveTitle("CrumbEatr");
 
         await page.goto("/#/inbox");
         await expect(

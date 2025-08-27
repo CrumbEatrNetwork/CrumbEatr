@@ -75,11 +75,11 @@ export const Header = ({
         <>
             {STAGING_MODE && (
                 <div className="banner vertically_spaced">
-                    THIS IS THE STAGING VERSION OF{" "}
+                    This is the staging version of{" "}
                     <a
                         href={`https://${window.backendCache.config.domains[0]}`}
                     >
-                        {window.backendCache.config.name.toUpperCase()}
+                        {window.backendCache.config.name}
                     </a>
                     !
                 </div>

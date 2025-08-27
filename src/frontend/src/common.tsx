@@ -287,9 +287,7 @@ export const setTitle = (value: string) => {
     const name = window.backendCache.config.name;
     const titleElement = document.getElementsByTagName("title")[0];
     if (titleElement)
-        titleElement.innerText = (
-            value ? `${name}: ${value}` : name
-        ).toUpperCase();
+        titleElement.innerText = value ? `${name}: ${value}` : name;
 };
 
 export const HASH_ITERATIONS = 15000;

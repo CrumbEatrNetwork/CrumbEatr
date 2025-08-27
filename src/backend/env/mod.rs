@@ -843,7 +843,7 @@ impl State {
                 user.invited_by = Some(inviter_id);
                 if let Some(inviter) = state.users.get_mut(&inviter_id) {
                     inviter.notify(format!(
-                        "Your invite was used by @{}! Thanks for helping #{} grow! 🤗",
+                        "Your invite was used by @{}! Thanks for helping #{} grow!",
                         name, CONFIG.name
                     ));
                 }
