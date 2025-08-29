@@ -10,9 +10,19 @@ All modifications listed below have been made under the terms of GPL v3.0, prese
 
 ## August 2025: UI/UX Refinements and Content Updates
 
+### August 25-26, 2025
+
+- **PWA Branding Consistency**: Fixed Progressive Web App branding inconsistencies by updating app title from "CRUMBEATR" to "CrumbEatr" in index.html and removing uppercase formatting from dynamic titles. Updated staging banner text to use proper capitalization instead of all caps for improved user experience.
+- **Mobile UI Improvements**: Enhanced mobile feed separator styling with thicker borders (1px to 2px) and reduced spacing between feed items (0.5em to 0.2em) for better visual separation and content density on mobile devices.
+- **Header Navigation Polish**: Reduced back button spacing from 0.5rem to 0.25rem to prevent header crowding and improve navigation layout on smaller screens.
+- **Cross-browser Compatibility**: Fixed Safari text selection issues by adding `-webkit-user-select: text` CSS prefix to selectable elements, ensuring consistent text selection behavior across all browsers.
+- **Realm Configuration Fix**: Corrected cleanup penalty field input behavior by changing default value from 10 to 0 and fixing placeholder consistency, improving realm creation user experience.
+- **Notification Improvements**: Removed emoji from invite notification messages to maintain professional and consistent messaging across the platform.
+- **Test Suite Updates**: Updated E2E tests to reflect corrected app title branding ("CRUMBEATR" to "CrumbEatr") ensuring test accuracy.
+
 ### August 24, 2025
 
-- **User Reference Updates**: Updated team member references throughout codebase - changed developer reference from "X" to "Y" and growth & marketing member from "mechaquan" to "SubZero" across whitepaper, backend minting logic, frontend token display, and test assertions
+- **User Reference Updates**: Updated team member references throughout codebase - changed developer reference to "Y" and growth & marketing member to "SubZero" across whitepaper, backend minting logic, frontend token display, and test assertions
 - **Internet Identity 2.0 Upgrade**: Updated authentication system from Internet Identity 1.0 to 2.0, changing identity provider URL from `https://identity.ic0.app` to `https://id.ai` for production and staging deployments. This enables improved user experience with Google login support, elimination of anchor numbers for new users, and enhanced passkey authentication flows.
 
 ### August 19-21, 2025

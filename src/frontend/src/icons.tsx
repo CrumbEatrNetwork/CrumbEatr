@@ -777,7 +777,7 @@ export const reaction2icon = (id: number) => {
         case 52:
             return <>💯</>;
         case 53:
-            return <>🚀</>;
+            return <>🛸</>;
         case 100:
             return <>⭐️</>;
         case 101:
