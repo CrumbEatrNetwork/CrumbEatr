@@ -41,8 +41,14 @@ pub fn set_metadata(
             <meta content="{3}" name="description" />
             <meta content="{2}" property="og:title" />
             <meta content="{3}" property="og:description" />
+            <meta content="https://{0}/_/raw/social-image.jpg" property="og:image" />
+            <meta content="image/jpeg" property="og:image:type" />
+            <meta content="1200" property="og:image:width" />
+            <meta content="630" property="og:image:height" />
             <meta content="{2}" property="twitter:title" />
             <meta content="{3}" property="twitter:description" />
+            <meta content="summary_large_image" property="twitter:card" />
+            <meta content="https://{0}/_/raw/social-image.jpg" property="twitter:image" />
             <meta content="{4}" property="og:type" />"#,
         host, path, title, desc, page_type
     )

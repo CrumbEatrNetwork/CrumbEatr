@@ -23,6 +23,22 @@ impl HttpRequest {
         }
     }
 
+    // TODO: Future enhancement for platform-specific social media crawler optimization
+    // /// Checks if the request is from a social media crawler
+    // pub fn is_social_media_crawler(&self) -> bool {
+    //     self.headers.iter().any(|(name, value)| {
+    //         name.to_lowercase() == "user-agent" && {
+    //             let ua = value.to_lowercase();
+    //             ua.contains("twitterbot")
+    //                 || ua.contains("facebookexternalhit")
+    //                 || ua.contains("redditbot")
+    //                 || ua.contains("linkedinbot")
+    //                 || ua.contains("whatsapp")
+    //                 || ua.contains("discordbot")
+    //         }
+    //     })
+    // }
+
     /// Searches for the first appearance of a parameter in the request URL.
     /// Returns `None` if the given parameter does not appear in the query.
     pub fn raw_query_param(&self, param: &str) -> Option<&str> {
