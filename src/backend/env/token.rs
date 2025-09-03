@@ -2,7 +2,6 @@ use super::MINUTE;
 use crate::*;
 use base64::{engine::general_purpose, Engine as _};
 use candid::{CandidType, Deserialize, Principal};
-use ic_cdk_macros::{query, update};
 use serde::Serialize;
 
 type Timestamp = u64;
@@ -249,8 +248,7 @@ pub struct Standard {
     url: String,
 }
 
-#[query]
-fn icrc1_metadata() -> Vec<(String, Value)> {
+pub fn icrc1_metadata() -> Vec<(String, Value)> {
     vec![
         ("icrc1:symbol".into(), Value::Text(icrc1_symbol())),
         ("icrc1:name".into(), Value::Text(icrc1_name())),
@@ -270,38 +268,31 @@ fn icrc1_metadata() -> Vec<(String, Value)> {
     ]
 }
 
-#[query]
-fn icrc1_name() -> String {
+pub fn icrc1_name() -> String {
     CONFIG.name.into()
 }
 
-#[query]
-fn icrc1_symbol() -> String {
+pub fn icrc1_symbol() -> String {
     CONFIG.token_symbol.into()
 }
 
-#[query]
-fn icrc1_decimals() -> u8 {
+pub fn icrc1_decimals() -> u8 {
     CONFIG.token_decimals
 }
 
-#[query]
 pub fn icrc1_fee() -> u128 {
     CONFIG.transaction_fee as u128
 }
 
-#[query]
 pub fn icrc1_total_supply() -> u128 {
     read(|state| state.balances.values().copied().sum::<u64>() as u128)
 }
 
-#[query]
-fn icrc1_minting_account() -> Option<Account> {
+pub fn icrc1_minting_account() -> Option<Account> {
     Some(account(Principal::anonymous()))
 }
 
-#[query]
-fn icrc1_balance_of(mut account: Account) -> u128 {
+pub fn icrc1_balance_of(mut account: Account) -> u128 {
     if account
         .subaccount
         .as_ref()
@@ -313,8 +304,7 @@ fn icrc1_balance_of(mut account: Account) -> u128 {
     read(|state| state.balances.get(&account).copied().unwrap_or_default() as u128)
 }
 
-#[query]
-fn icrc1_supported_standards() -> Vec<Standard> {
+pub fn icrc1_supported_standards() -> Vec<Standard> {
     vec![
         Standard {
             name: "ICRC-1".into(),
@@ -327,8 +317,7 @@ fn icrc1_supported_standards() -> Vec<Standard> {
     ]
 }
 
-#[update]
-fn icrc1_transfer(mut args: TransferArgs) -> Result<u128, TransferError> {
+pub fn icrc1_transfer(mut args: TransferArgs) -> Result<u128, TransferError> {
     let owner = caller();
     if owner == Principal::anonymous() {
         return Err(TransferError::GenericError(GenericError {
@@ -346,8 +335,7 @@ fn icrc1_transfer(mut args: TransferArgs) -> Result<u128, TransferError> {
     mutate(|state| transfer(state, time(), owner, args))
 }
 
-#[update]
-fn icrc2_approve(mut args: ApproveArgs) -> Result<u128, ApproveError> {
+pub fn icrc2_approve(mut args: ApproveArgs) -> Result<u128, ApproveError> {
     let owner = caller();
     if owner == Principal::anonymous() {
         return Err(ApproveError::GenericError(GenericError {
@@ -368,8 +356,7 @@ fn icrc2_approve(mut args: ApproveArgs) -> Result<u128, ApproveError> {
     mutate(|state| approve(state, time(), owner, args))
 }
 
-#[query]
-fn icrc2_allowance(args: AllowanceArgs) -> Allowance {
+pub fn icrc2_allowance(args: AllowanceArgs) -> Allowance {
     read(|state| {
         let allowance_key = (args.account, args.spender);
         match state.allowances.get(&allowance_key) {
@@ -397,8 +384,7 @@ fn icrc2_allowance(args: AllowanceArgs) -> Allowance {
     })
 }
 
-#[update]
-fn icrc2_transfer_from(mut args: TransferFromArgs) -> Result<u128, TransferFromError> {
+pub fn icrc2_transfer_from(mut args: TransferFromArgs) -> Result<u128, TransferFromError> {
     let spender = caller();
     if spender == Principal::anonymous() {
         return Err(TransferFromError::GenericError(GenericError {
@@ -419,8 +405,7 @@ fn icrc2_transfer_from(mut args: TransferFromArgs) -> Result<u128, TransferFromE
     mutate(|state| transfer_from(state, time(), spender, args))
 }
 
-#[update]
-fn icrc21_canister_call_consent_message(
+pub fn icrc21_canister_call_consent_message(
     request: Icrc21ConsentMessageRequest,
 ) -> Icrc21ConsentMessageResponse {
     let method = request.method.as_str();

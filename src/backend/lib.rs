@@ -13,6 +13,85 @@ mod metadata;
 mod queries;
 mod updates;
 
+// ICRC method wrappers - these need to be here for the macros to register them as canister endpoints
+use env::token::{
+    Account, Allowance, AllowanceArgs, ApproveArgs, ApproveError, 
+    Icrc21ConsentMessageRequest, Icrc21ConsentMessageResponse, Standard, Value,
+    TransferArgs, TransferError, TransferFromArgs, TransferFromError,
+};
+
+#[ic_cdk::query]
+pub fn icrc1_balance_of(account: Account) -> u128 {
+    env::token::icrc1_balance_of(account)
+}
+
+#[ic_cdk::query]
+pub fn icrc1_decimals() -> u8 {
+    env::token::icrc1_decimals()
+}
+
+#[ic_cdk::query]
+pub fn icrc1_fee() -> u128 {
+    env::token::icrc1_fee()
+}
+
+#[ic_cdk::query]
+pub fn icrc1_metadata() -> Vec<(String, Value)> {
+    env::token::icrc1_metadata()
+}
+
+#[ic_cdk::query]
+pub fn icrc1_minting_account() -> Option<Account> {
+    env::token::icrc1_minting_account()
+}
+
+#[ic_cdk::query]
+pub fn icrc1_name() -> String {
+    env::token::icrc1_name()
+}
+
+#[ic_cdk::query]
+pub fn icrc1_supported_standards() -> Vec<Standard> {
+    env::token::icrc1_supported_standards()
+}
+
+#[ic_cdk::query]
+pub fn icrc1_symbol() -> String {
+    env::token::icrc1_symbol()
+}
+
+#[ic_cdk::query]
+pub fn icrc1_total_supply() -> u128 {
+    env::token::icrc1_total_supply()
+}
+
+#[ic_cdk::update]
+pub fn icrc1_transfer(args: TransferArgs) -> Result<u128, TransferError> {
+    env::token::icrc1_transfer(args)
+}
+
+#[ic_cdk::query]
+pub fn icrc2_allowance(args: AllowanceArgs) -> Allowance {
+    env::token::icrc2_allowance(args)
+}
+
+#[ic_cdk::update]
+pub fn icrc2_approve(args: ApproveArgs) -> Result<u128, ApproveError> {
+    env::token::icrc2_approve(args)
+}
+
+#[ic_cdk::update]
+pub fn icrc2_transfer_from(args: TransferFromArgs) -> Result<u128, TransferFromError> {
+    env::token::icrc2_transfer_from(args)
+}
+
+#[ic_cdk::update]
+pub fn icrc21_canister_call_consent_message(
+    request: Icrc21ConsentMessageRequest
+) -> Icrc21ConsentMessageResponse {
+    env::token::icrc21_canister_call_consent_message(request)
+}
+
 const BACKUP_PAGE_SIZE: u32 = 1024 * 1024;
 
 thread_local! {
