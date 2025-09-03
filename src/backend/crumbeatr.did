@@ -31,6 +31,120 @@ type TransferError = variant {
   InsufficientFunds : InsufficientFunds;
 };
 type Value = variant { Nat : nat; Text : text };
+
+// ICRC-2 Types
+type ApproveArgs = record {
+  from_subaccount : opt vec nat8;
+  spender : Account;
+  amount : nat;
+  expected_allowance : opt nat;
+  expires_at : opt nat64;
+  fee : opt nat;
+  memo : opt vec nat8;
+  created_at_time : opt nat64;
+};
+
+type AllowanceChanged = record { current_allowance : nat };
+type Expired = record { ledger_time : nat64 };
+type ApproveError = variant {
+  BadFee : BadFee;
+  InsufficientFunds : InsufficientFunds;
+  AllowanceChanged : AllowanceChanged;
+  Expired : Expired;
+  TooOld;
+  CreatedInFuture : CreatedInFuture;
+  GenericError : GenericError;
+};
+
+type TransferFromArgs = record {
+  spender_subaccount : opt vec nat8;
+  from : Account;
+  to : Account;
+  amount : nat;
+  fee : opt nat;
+  memo : opt vec nat8;
+  created_at_time : opt nat64;
+};
+
+type InsufficientAllowance = record { allowance : nat };
+type TransferFromError = variant {
+  BadFee : BadFee;
+  InsufficientFunds : InsufficientFunds;
+  InsufficientAllowance : InsufficientAllowance;
+  TooOld;
+  CreatedInFuture : CreatedInFuture;
+  GenericError : GenericError;
+};
+
+type AllowanceArgs = record {
+  account : Account;
+  spender : Account;
+};
+
+type Allowance = record {
+  allowance : nat;
+  expires_at : opt nat64;
+};
+
+type Result_ApproveError = variant { Ok : nat; Err : ApproveError };
+type Result_TransferFromError = variant { Ok : nat; Err : TransferFromError };
+
+// ICRC-21 Types
+type Icrc21ConsentMessageMetadata = record {
+  language : text;
+  utc_offset_minutes : opt int16;
+};
+
+type Icrc21DeviceSpec = variant {
+  GenericDisplay;
+  LineDisplay : record {
+    characters_per_line : nat16;
+    lines_per_page : nat16;
+  };
+};
+
+type Icrc21ConsentMessageSpec = record {
+  metadata : Icrc21ConsentMessageMetadata;
+  device_spec : opt Icrc21DeviceSpec;
+};
+
+type Icrc21ConsentMessageRequest = record {
+  method : text;
+  arg : vec nat8;
+  user_preferences : Icrc21ConsentMessageSpec;
+};
+
+type Icrc21Page = record {
+  lines : vec text;
+};
+
+type Icrc21ConsentMessage = variant {
+  GenericDisplayMessage : text;
+  LineDisplayMessage : record {
+    pages : vec Icrc21Page;
+  };
+};
+
+type Icrc21ConsentInfo = record {
+  consent_message : Icrc21ConsentMessage;
+  metadata : Icrc21ConsentMessageMetadata;
+};
+
+type Icrc21ErrorInfo = record {
+  description : text;
+};
+
+type Icrc21Error = variant {
+  UnsupportedCanisterCall : Icrc21ErrorInfo;
+  ConsentMessageUnavailable : Icrc21ErrorInfo;
+  InsufficientPayment : Icrc21ErrorInfo;
+  GenericError : record { error_code : nat; description : text };
+};
+
+type Icrc21ConsentMessageResponse = variant {
+  Ok : Icrc21ConsentInfo;
+  Err : Icrc21Error;
+};
 service : () -> {
   add_post : (
       text,
@@ -58,6 +172,10 @@ service : () -> {
   icrc1_symbol : () -> (text) query;
   icrc1_total_supply : () -> (nat) query;
   icrc1_transfer : (TransferArgs) -> (Result_3);
+  icrc2_approve : (ApproveArgs) -> (Result_ApproveError);
+  icrc2_allowance : (AllowanceArgs) -> (Allowance) query;
+  icrc2_transfer_from : (TransferFromArgs) -> (Result_TransferFromError);
+  icrc21_canister_call_consent_message : (Icrc21ConsentMessageRequest) -> (Icrc21ConsentMessageResponse);
   link_cold_wallet : (nat64) -> (Result_1);
   prod_release : () -> (bool);
   propose_release : (text, text, vec nat8) -> (Result_4);

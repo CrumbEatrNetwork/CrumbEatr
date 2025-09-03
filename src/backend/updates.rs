@@ -6,6 +6,10 @@ use env::{
     parse_amount,
     post::{Extension, Post, PostId},
     proposals::{Release, Reward},
+    token::{
+        Allowance, AllowanceArgs, ApproveArgs, ApproveError, Icrc21ConsentMessageRequest,
+        Icrc21ConsentMessageResponse, TransferFromArgs, TransferFromError,
+    },
     user::{Draft, User, UserId},
     State,
 };

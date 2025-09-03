@@ -19,6 +19,115 @@ pub struct Account {
     pub subaccount: Option<Subaccount>,
 }
 
+#[derive(CandidType, Clone, Serialize, Deserialize)]
+pub struct AllowanceData {
+    pub allowance: Token,
+    pub expires_at: Option<Timestamp>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ApproveArgs {
+    pub from_subaccount: Option<Subaccount>,
+    pub spender: Account,
+    pub amount: u128,
+    pub expected_allowance: Option<u128>,
+    pub expires_at: Option<Timestamp>,
+    pub fee: Option<u128>,
+    pub memo: Option<Memo>,
+    pub created_at_time: Option<Timestamp>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct TransferFromArgs {
+    pub spender_subaccount: Option<Subaccount>,
+    pub from: Account,
+    pub to: Account,
+    pub amount: u128,
+    pub fee: Option<u128>,
+    pub memo: Option<Memo>,
+    pub created_at_time: Option<Timestamp>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct AllowanceArgs {
+    pub account: Account,
+    pub spender: Account,
+}
+
+#[derive(CandidType, Serialize, Deserialize)]
+pub struct Allowance {
+    pub allowance: u128,
+    pub expires_at: Option<Timestamp>,
+}
+
+// ICRC-21 Consent Message Types
+#[derive(CandidType, Serialize, Deserialize)]
+pub struct Icrc21ConsentMessageMetadata {
+    pub language: String,
+    pub utc_offset_minutes: Option<i16>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub enum Icrc21DeviceSpec {
+    GenericDisplay,
+    LineDisplay {
+        characters_per_line: u16,
+        lines_per_page: u16,
+    },
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct Icrc21ConsentMessageSpec {
+    pub metadata: Icrc21ConsentMessageMetadata,
+    pub device_spec: Option<Icrc21DeviceSpec>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct Icrc21ConsentMessageRequest {
+    pub method: String,
+    pub arg: Vec<u8>,
+    pub user_preferences: Icrc21ConsentMessageSpec,
+}
+
+#[derive(CandidType, Serialize)]
+pub enum Icrc21ConsentMessage {
+    GenericDisplayMessage(String),
+    LineDisplayMessage { pages: Vec<Icrc21Page> },
+}
+
+#[derive(CandidType, Serialize)]
+pub struct Icrc21Page {
+    pub lines: Vec<String>,
+}
+
+#[derive(CandidType, Serialize)]
+pub struct Icrc21ConsentInfo {
+    pub consent_message: Icrc21ConsentMessage,
+    pub metadata: Icrc21ConsentMessageMetadata,
+}
+
+#[derive(CandidType, Serialize)]
+pub struct Icrc21ErrorInfo {
+    pub description: String,
+}
+
+#[derive(CandidType, Serialize)]
+pub enum Icrc21Error {
+    UnsupportedCanisterCall(Icrc21ErrorInfo),
+    ConsentMessageUnavailable(Icrc21ErrorInfo),
+    InsufficientPayment(Icrc21ErrorInfo),
+    GenericError {
+        error_code: u128,
+        description: String,
+    },
+}
+
+#[derive(CandidType, Serialize)]
+pub enum Icrc21ConsentMessageResponse {
+    Ok(Icrc21ConsentInfo),
+    Err(Icrc21Error),
+}
+
 #[derive(CandidType, Deserialize)]
 pub struct TransferArgs {
     pub from_subaccount: Option<Subaccount>,
@@ -80,6 +189,47 @@ pub enum TransferError {
     // Duplicate(Duplicate),
     // TemporarilyUnavailable,
     InsufficientFunds(InsufficientFunds),
+    TooOld,
+    CreatedInFuture(CreatedInFuture),
+    GenericError(GenericError),
+}
+
+#[cfg_attr(test, derive(PartialEq))]
+#[derive(CandidType, Debug, Serialize, Deserialize)]
+pub struct AllowanceChanged {
+    pub current_allowance: u128,
+}
+
+#[cfg_attr(test, derive(PartialEq))]
+#[derive(CandidType, Debug, Serialize, Deserialize)]
+pub struct Expired {
+    pub ledger_time: Timestamp,
+}
+
+#[cfg_attr(test, derive(PartialEq))]
+#[derive(CandidType, Debug, Serialize, Deserialize)]
+pub enum ApproveError {
+    BadFee(BadFee),
+    InsufficientFunds(InsufficientFunds),
+    AllowanceChanged(AllowanceChanged),
+    Expired(Expired),
+    TooOld,
+    CreatedInFuture(CreatedInFuture),
+    GenericError(GenericError),
+}
+
+#[cfg_attr(test, derive(PartialEq))]
+#[derive(CandidType, Debug, Serialize, Deserialize)]
+pub struct InsufficientAllowance {
+    pub allowance: u128,
+}
+
+#[cfg_attr(test, derive(PartialEq))]
+#[derive(CandidType, Debug, Serialize, Deserialize)]
+pub enum TransferFromError {
+    BadFee(BadFee),
+    InsufficientFunds(InsufficientFunds),
+    InsufficientAllowance(InsufficientAllowance),
     TooOld,
     CreatedInFuture(CreatedInFuture),
     GenericError(GenericError),
@@ -165,10 +315,16 @@ fn icrc1_balance_of(mut account: Account) -> u128 {
 
 #[query]
 fn icrc1_supported_standards() -> Vec<Standard> {
-    vec![Standard {
-        name: "ICRC-1".into(),
-        url: "https://github.com/dfinity/ICRC-1".into(),
-    }]
+    vec![
+        Standard {
+            name: "ICRC-1".into(),
+            url: "https://github.com/dfinity/ICRC-1".into(),
+        },
+        Standard {
+            name: "ICRC-2".into(),
+            url: "https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-2".into(),
+        },
+    ]
 }
 
 #[update]
@@ -188,6 +344,177 @@ fn icrc1_transfer(mut args: TransferArgs) -> Result<u128, TransferError> {
         }));
     }
     mutate(|state| transfer(state, time(), owner, args))
+}
+
+#[update]
+fn icrc2_approve(mut args: ApproveArgs) -> Result<u128, ApproveError> {
+    let owner = caller();
+    if owner == Principal::anonymous() {
+        return Err(ApproveError::GenericError(GenericError {
+            error_code: 0,
+            message: "Anonymous principal cannot approve tokens".into(),
+        }));
+    }
+
+    // Set default fee if not provided
+    if args.fee.is_none() {
+        args.fee = Some(icrc1_fee());
+    } else if args.fee != Some(icrc1_fee()) {
+        return Err(ApproveError::BadFee(BadFee {
+            expected_fee: icrc1_fee(),
+        }));
+    }
+
+    mutate(|state| approve(state, time(), owner, args))
+}
+
+#[query]
+fn icrc2_allowance(args: AllowanceArgs) -> Allowance {
+    read(|state| {
+        let allowance_key = (args.account, args.spender);
+        match state.allowances.get(&allowance_key) {
+            Some(allowance_data) => {
+                // Check if allowance is expired
+                let now = time();
+                if let Some(expires_at) = allowance_data.expires_at {
+                    if now >= expires_at {
+                        return Allowance {
+                            allowance: 0,
+                            expires_at: None,
+                        };
+                    }
+                }
+                Allowance {
+                    allowance: allowance_data.allowance as u128,
+                    expires_at: allowance_data.expires_at,
+                }
+            }
+            None => Allowance {
+                allowance: 0,
+                expires_at: None,
+            },
+        }
+    })
+}
+
+#[update]
+fn icrc2_transfer_from(mut args: TransferFromArgs) -> Result<u128, TransferFromError> {
+    let spender = caller();
+    if spender == Principal::anonymous() {
+        return Err(TransferFromError::GenericError(GenericError {
+            error_code: 0,
+            message: "Anonymous principal cannot transfer tokens".into(),
+        }));
+    }
+
+    // Set default fee if not provided
+    if args.fee.is_none() {
+        args.fee = Some(icrc1_fee());
+    } else if args.fee != Some(icrc1_fee()) {
+        return Err(TransferFromError::BadFee(BadFee {
+            expected_fee: icrc1_fee(),
+        }));
+    }
+
+    mutate(|state| transfer_from(state, time(), spender, args))
+}
+
+#[update]
+fn icrc21_canister_call_consent_message(
+    request: Icrc21ConsentMessageRequest,
+) -> Icrc21ConsentMessageResponse {
+    let method = request.method.as_str();
+
+    match method {
+        "icrc1_transfer" => match candid::decode_one::<TransferArgs>(&request.arg) {
+            Ok(args) => {
+                let amount_display = format_token_amount(args.amount);
+                let to_display = format_account(&args.to);
+                let fee_display = format_token_amount(args.fee.unwrap_or(icrc1_fee()));
+
+                let message = format!(
+                    "Transfer {} {} to account {} (Fee: {} {})",
+                    amount_display,
+                    icrc1_symbol(),
+                    to_display,
+                    fee_display,
+                    icrc1_symbol()
+                );
+
+                Icrc21ConsentMessageResponse::Ok(Icrc21ConsentInfo {
+                    consent_message: Icrc21ConsentMessage::GenericDisplayMessage(message),
+                    metadata: request.user_preferences.metadata,
+                })
+            }
+            Err(_) => Icrc21ConsentMessageResponse::Err(Icrc21Error::GenericError {
+                error_code: 400,
+                description: "Invalid transfer arguments".to_string(),
+            }),
+        },
+        "icrc2_approve" => match candid::decode_one::<ApproveArgs>(&request.arg) {
+            Ok(args) => {
+                let amount_display = format_token_amount(args.amount);
+                let spender_display = format_account(&args.spender);
+                let fee_display = format_token_amount(args.fee.unwrap_or(icrc1_fee()));
+
+                let expires_msg = match args.expires_at {
+                    Some(exp) => format!(" (Expires: {})", format_timestamp(exp)),
+                    None => "".to_string(),
+                };
+
+                let message = format!(
+                    "Approve {} {} spending allowance for account {}{} (Fee: {} {})",
+                    amount_display,
+                    icrc1_symbol(),
+                    spender_display,
+                    expires_msg,
+                    fee_display,
+                    icrc1_symbol()
+                );
+
+                Icrc21ConsentMessageResponse::Ok(Icrc21ConsentInfo {
+                    consent_message: Icrc21ConsentMessage::GenericDisplayMessage(message),
+                    metadata: request.user_preferences.metadata,
+                })
+            }
+            Err(_) => Icrc21ConsentMessageResponse::Err(Icrc21Error::GenericError {
+                error_code: 400,
+                description: "Invalid approve arguments".to_string(),
+            }),
+        },
+        "icrc2_transfer_from" => match candid::decode_one::<TransferFromArgs>(&request.arg) {
+            Ok(args) => {
+                let amount_display = format_token_amount(args.amount);
+                let from_display = format_account(&args.from);
+                let to_display = format_account(&args.to);
+                let fee_display = format_token_amount(args.fee.unwrap_or(icrc1_fee()));
+
+                let message = format!(
+                        "Transfer {} {} from account {} to account {} using pre-approved allowance (Fee: {} {})",
+                        amount_display,
+                        icrc1_symbol(),
+                        from_display,
+                        to_display,
+                        fee_display,
+                        icrc1_symbol()
+                    );
+
+                Icrc21ConsentMessageResponse::Ok(Icrc21ConsentInfo {
+                    consent_message: Icrc21ConsentMessage::GenericDisplayMessage(message),
+                    metadata: request.user_preferences.metadata,
+                })
+            }
+            Err(_) => Icrc21ConsentMessageResponse::Err(Icrc21Error::GenericError {
+                error_code: 400,
+                description: "Invalid transfer_from arguments".to_string(),
+            }),
+        },
+        _ => Icrc21ConsentMessageResponse::Err(Icrc21Error::UnsupportedCanisterCall(
+            Icrc21ErrorInfo {
+                description: format!("Method '{}' is not supported for consent messages", method),
+            },
+        )),
+    }
 }
 
 pub fn transfer(
@@ -316,11 +643,298 @@ fn update_user_balance(state: &mut State, principal: Principal, balance: Token) 
     }
 }
 
+pub fn approve(
+    state: &mut State,
+    now: u64,
+    owner: Principal,
+    args: ApproveArgs,
+) -> Result<u128, ApproveError> {
+    let ApproveArgs {
+        from_subaccount,
+        spender,
+        amount,
+        expected_allowance,
+        expires_at,
+        fee,
+        memo,
+        created_at_time,
+    } = args;
+
+    // Check time bounds
+    let effective_time = created_at_time.unwrap_or(now);
+    if effective_time + 5 * MINUTE < now {
+        return Err(ApproveError::TooOld);
+    }
+    if effective_time.saturating_sub(5 * MINUTE) > now {
+        return Err(ApproveError::CreatedInFuture(CreatedInFuture {
+            ledger_time: now,
+        }));
+    }
+
+    // Check if allowance has expired
+    if let Some(exp_time) = expires_at {
+        if exp_time <= now {
+            return Err(ApproveError::Expired(Expired { ledger_time: now }));
+        }
+    }
+
+    // Validate memo length
+    if memo.as_ref().map(|bytes| bytes.len()) > Some(32) {
+        return Err(ApproveError::GenericError(GenericError {
+            error_code: 2,
+            message: "memo longer than 32 bytes".to_string(),
+        }));
+    }
+
+    // Normalize subaccounts
+    let subaccount = if from_subaccount
+        .as_ref()
+        .map(|val| val.iter().all(|b| b == &0))
+        .unwrap_or(true)
+    {
+        None
+    } else {
+        from_subaccount
+    };
+
+    let from_account = Account { owner, subaccount };
+    let allowance_key = (from_account.clone(), spender.clone());
+
+    // Check expected allowance if provided
+    if let Some(expected) = expected_allowance {
+        let current_allowance = state
+            .allowances
+            .get(&allowance_key)
+            .map(|data| {
+                // Check if current allowance is expired
+                if let Some(exp) = data.expires_at {
+                    if now >= exp {
+                        0
+                    } else {
+                        data.allowance as u128
+                    }
+                } else {
+                    data.allowance as u128
+                }
+            })
+            .unwrap_or(0);
+
+        if current_allowance != expected {
+            return Err(ApproveError::AllowanceChanged(AllowanceChanged {
+                current_allowance,
+            }));
+        }
+    }
+
+    // Check if user has sufficient balance to pay the fee
+    let balance = state
+        .balances
+        .get(&from_account)
+        .copied()
+        .unwrap_or_default();
+    let effective_fee = fee.unwrap_or(icrc1_fee()) as Token;
+    if balance < effective_fee {
+        return Err(ApproveError::InsufficientFunds(InsufficientFunds {
+            balance: balance as u128,
+        }));
+    }
+
+    // Deduct fee from user's balance
+    let new_balance = balance.saturating_sub(effective_fee);
+    if new_balance == 0 {
+        state.balances.remove(&from_account);
+    } else {
+        state.balances.insert(from_account.clone(), new_balance);
+    }
+    update_user_balance(state, from_account.owner, new_balance);
+
+    // Set or update the allowance
+    let allowance_data = AllowanceData {
+        allowance: amount as Token,
+        expires_at,
+    };
+    state.allowances.insert(allowance_key, allowance_data);
+
+    // Record the transaction in the ledger
+    state.ledger.push(Transaction {
+        timestamp: now,
+        from: from_account,
+        to: spender, // For approve, the "to" is the spender
+        amount: amount as Token,
+        fee: effective_fee,
+        memo,
+    });
+
+    Ok(state.ledger.len().saturating_sub(1) as u128)
+}
+
+pub fn transfer_from(
+    state: &mut State,
+    now: u64,
+    spender: Principal,
+    args: TransferFromArgs,
+) -> Result<u128, TransferFromError> {
+    let TransferFromArgs {
+        spender_subaccount,
+        from,
+        to,
+        amount,
+        fee,
+        memo,
+        created_at_time,
+    } = args;
+
+    // Check time bounds
+    let effective_time = created_at_time.unwrap_or(now);
+    if effective_time + 5 * MINUTE < now {
+        return Err(TransferFromError::TooOld);
+    }
+    if effective_time.saturating_sub(5 * MINUTE) > now {
+        return Err(TransferFromError::CreatedInFuture(CreatedInFuture {
+            ledger_time: now,
+        }));
+    }
+
+    // Validate memo length
+    if memo.as_ref().map(|bytes| bytes.len()) > Some(32) {
+        return Err(TransferFromError::GenericError(GenericError {
+            error_code: 2,
+            message: "memo longer than 32 bytes".to_string(),
+        }));
+    }
+
+    // Normalize spender subaccount
+    let spender_subaccount = if spender_subaccount
+        .as_ref()
+        .map(|val| val.iter().all(|b| b == &0))
+        .unwrap_or(true)
+    {
+        None
+    } else {
+        spender_subaccount
+    };
+
+    let spender_account = Account {
+        owner: spender,
+        subaccount: spender_subaccount,
+    };
+    let allowance_key = (from.clone(), spender_account);
+
+    // Check allowance and get its value without holding a mutable reference
+    let current_allowance = match state.allowances.get(&allowance_key) {
+        Some(data) => {
+            // Check if allowance is expired
+            if let Some(expires_at) = data.expires_at {
+                if now >= expires_at {
+                    return Err(TransferFromError::InsufficientAllowance(
+                        InsufficientAllowance { allowance: 0 },
+                    ));
+                }
+            }
+            data.allowance
+        }
+        None => {
+            return Err(TransferFromError::InsufficientAllowance(
+                InsufficientAllowance { allowance: 0 },
+            ));
+        }
+    };
+
+    let effective_fee = fee.unwrap_or(icrc1_fee()) as Token;
+    let total_needed = (amount as Token) + effective_fee;
+
+    // Check if allowance is sufficient
+    if current_allowance < total_needed {
+        return Err(TransferFromError::InsufficientAllowance(
+            InsufficientAllowance {
+                allowance: current_allowance as u128,
+            },
+        ));
+    }
+
+    // Check if the "from" account has sufficient balance
+    let from_balance = state.balances.get(&from).copied().unwrap_or_default();
+    if from_balance < total_needed {
+        return Err(TransferFromError::InsufficientFunds(InsufficientFunds {
+            balance: from_balance as u128,
+        }));
+    }
+
+    // Update balances
+    let new_from_balance = from_balance.saturating_sub(total_needed);
+    if new_from_balance == 0 {
+        state.balances.remove(&from);
+    } else {
+        state.balances.insert(from.clone(), new_from_balance);
+    }
+    update_user_balance(state, from.owner, new_from_balance);
+
+    let to_balance = state.balances.get(&to).copied().unwrap_or_default();
+    let new_to_balance = to_balance.saturating_add(amount as Token);
+    state.balances.insert(to.clone(), new_to_balance);
+    update_user_balance(state, to.owner, new_to_balance);
+
+    // Update allowance - now we can safely get mutable reference
+    let new_allowance = current_allowance.saturating_sub(total_needed);
+    if new_allowance == 0 {
+        state.allowances.remove(&allowance_key);
+    } else if let Some(allowance_data) = state.allowances.get_mut(&allowance_key) {
+        allowance_data.allowance = new_allowance;
+    }
+
+    // Record the transaction in the ledger
+    state.ledger.push(Transaction {
+        timestamp: now,
+        from,
+        to,
+        amount: amount as Token,
+        fee: effective_fee,
+        memo,
+    });
+
+    Ok(state.ledger.len().saturating_sub(1) as u128)
+}
+
 pub fn account(owner: Principal) -> Account {
     Account {
         owner,
         subaccount: None,
     }
+}
+
+// Helper functions for ICRC-21 consent messages
+fn format_token_amount(amount: u128) -> String {
+    let decimals = icrc1_decimals() as u32;
+    let divisor = 10_u128.pow(decimals);
+    let whole = amount / divisor;
+    let fractional = amount % divisor;
+
+    if fractional == 0 {
+        format!("{}", whole)
+    } else {
+        let frac_str = format!("{:0width$}", fractional, width = decimals as usize);
+        let trimmed = frac_str.trim_end_matches('0');
+        if trimmed.is_empty() {
+            format!("{}", whole)
+        } else {
+            format!("{}.{}", whole, trimmed)
+        }
+    }
+}
+
+fn format_account(account: &Account) -> String {
+    match &account.subaccount {
+        Some(subaccount) if !subaccount.iter().all(|b| b == &0) => {
+            format!("{}.{}", account.owner.to_text(), hex::encode(subaccount))
+        }
+        _ => account.owner.to_text(),
+    }
+}
+
+fn format_timestamp(timestamp: u64) -> String {
+    // Convert nanoseconds to seconds for a more readable format
+    let seconds = timestamp / 1_000_000_000;
+    format!("{} seconds from epoch", seconds)
 }
 
 /// Smallest amount of non-fractional tokens

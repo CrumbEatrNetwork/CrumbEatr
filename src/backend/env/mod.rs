@@ -142,6 +142,9 @@ pub struct State {
     pub balances: HashMap<Account, Token>,
 
     #[serde(skip)]
+    pub allowances: HashMap<(Account, Account), token::AllowanceData>,
+
+    #[serde(skip)]
     // new principal -> old principal
     pub principal_change_requests: BTreeMap<Principal, Principal>,
 
