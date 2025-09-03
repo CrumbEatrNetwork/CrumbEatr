@@ -6,10 +6,6 @@ use env::{
     parse_amount,
     post::{Extension, Post, PostId},
     proposals::{Release, Reward},
-    token::{
-        Allowance, AllowanceArgs, ApproveArgs, ApproveError, Icrc21ConsentMessageRequest,
-        Icrc21ConsentMessageResponse, TransferFromArgs, TransferFromError,
-    },
     user::{Draft, User, UserId},
     State,
 };
@@ -21,7 +17,7 @@ use ic_cdk::{
     },
     spawn,
 };
-use ic_cdk_macros::{init, post_upgrade, pre_upgrade, update};
+use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use ic_ledger_types::{AccountIdentifier, Tokens};
 use serde_bytes::ByteBuf;
@@ -656,6 +652,85 @@ fn caller() -> Principal {
     let caller = ic_cdk::caller();
     assert_ne!(caller, Principal::anonymous(), "authentication required");
     caller
+}
+
+// ICRC method implementations
+use env::token::{
+    Account, Allowance, AllowanceArgs, ApproveArgs, ApproveError, Icrc21ConsentMessageRequest,
+    Icrc21ConsentMessageResponse, Standard, TransferArgs, TransferError, TransferFromArgs,
+    TransferFromError, Value,
+};
+
+#[query]
+fn icrc1_balance_of(account: Account) -> u128 {
+    env::token::icrc1_balance_of(account)
+}
+
+#[query]
+fn icrc1_decimals() -> u8 {
+    env::token::icrc1_decimals()
+}
+
+#[query]
+fn icrc1_fee() -> u128 {
+    env::token::icrc1_fee()
+}
+
+#[query]
+fn icrc1_metadata() -> Vec<(String, Value)> {
+    env::token::icrc1_metadata()
+}
+
+#[query]
+fn icrc1_minting_account() -> Option<Account> {
+    env::token::icrc1_minting_account()
+}
+
+#[query]
+fn icrc1_name() -> String {
+    env::token::icrc1_name()
+}
+
+#[query]
+fn icrc1_supported_standards() -> Vec<Standard> {
+    env::token::icrc1_supported_standards()
+}
+
+#[query]
+fn icrc1_symbol() -> String {
+    env::token::icrc1_symbol()
+}
+
+#[query]
+fn icrc1_total_supply() -> u128 {
+    env::token::icrc1_total_supply()
+}
+
+#[update]
+fn icrc1_transfer(args: TransferArgs) -> Result<u128, TransferError> {
+    env::token::icrc1_transfer(args)
+}
+
+#[query]
+fn icrc2_allowance(args: AllowanceArgs) -> Allowance {
+    env::token::icrc2_allowance(args)
+}
+
+#[update]
+fn icrc2_approve(args: ApproveArgs) -> Result<u128, ApproveError> {
+    env::token::icrc2_approve(args)
+}
+
+#[update]
+fn icrc2_transfer_from(args: TransferFromArgs) -> Result<u128, TransferFromError> {
+    env::token::icrc2_transfer_from(args)
+}
+
+#[update]
+fn icrc21_canister_call_consent_message(
+    request: Icrc21ConsentMessageRequest,
+) -> Icrc21ConsentMessageResponse {
+    env::token::icrc21_canister_call_consent_message(request)
 }
 
 #[test]
