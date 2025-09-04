@@ -1121,7 +1121,7 @@ pub fn icrc3_supported_block_types() -> Vec<BlockType> {
     ]
 }
 
-// The crucial get_transactions method that KongSwap expects
+// The crucial get_transactions method that KongSwap expects - ICRC-3 format
 #[derive(CandidType, Deserialize)]
 pub struct GetTransactionsRequest {
     pub start: u128,
@@ -1132,8 +1132,57 @@ pub struct GetTransactionsRequest {
 pub struct GetTransactionsResponse {
     pub first_index: u128,
     pub log_length: u64,
-    pub transactions: Vec<Transaction>,
+    pub transactions: Vec<Icrc3Transaction>,
     pub archived_transactions: Vec<ArchivedTransactionRange>,
+}
+
+// Official ICRC-3 Transaction structure
+#[derive(CandidType)]
+pub struct Icrc3Transaction {
+    pub kind: String,
+    pub mint: Option<Icrc3Mint>,
+    pub burn: Option<Icrc3Burn>,
+    pub transfer: Option<Icrc3Transfer>,
+    pub approve: Option<Icrc3Approve>,
+    pub timestamp: u64,
+}
+
+#[derive(CandidType)]
+pub struct Icrc3Transfer {
+    pub from: Account,
+    pub to: Account,
+    pub amount: u128,
+    pub fee: Option<u128>,
+    pub memo: Option<Vec<u8>>,
+    pub created_at_time: Option<u64>,
+}
+
+#[derive(CandidType)]
+pub struct Icrc3Mint {
+    pub to: Account,
+    pub amount: u128,
+    pub memo: Option<Vec<u8>>,
+    pub created_at_time: Option<u64>,
+}
+
+#[derive(CandidType)]
+pub struct Icrc3Burn {
+    pub from: Account,
+    pub amount: u128,
+    pub memo: Option<Vec<u8>>,
+    pub created_at_time: Option<u64>,
+}
+
+#[derive(CandidType)]
+pub struct Icrc3Approve {
+    pub from: Account,
+    pub spender: Account,
+    pub amount: u128,
+    pub expected_allowance: Option<u128>,
+    pub expires_at: Option<u64>,
+    pub fee: Option<u128>,
+    pub memo: Option<Vec<u8>>,
+    pub created_at_time: Option<u64>,
 }
 
 #[derive(CandidType)]
@@ -1149,6 +1198,60 @@ pub struct QueryArchiveFn {
     pub method: String,
 }
 
+// Convert our internal Transaction to ICRC-3 format
+fn transaction_to_icrc3(tx: &Transaction) -> Icrc3Transaction {
+    let minting_account = icrc1_minting_account().expect("no minting account");
+
+    if tx.from == minting_account {
+        // Mint transaction
+        Icrc3Transaction {
+            kind: "mint".to_string(),
+            mint: Some(Icrc3Mint {
+                to: tx.to.clone(),
+                amount: tx.amount as u128,
+                memo: tx.memo.clone(),
+                created_at_time: Some(tx.timestamp),
+            }),
+            burn: None,
+            transfer: None,
+            approve: None,
+            timestamp: tx.timestamp,
+        }
+    } else if tx.to == minting_account {
+        // Burn transaction
+        Icrc3Transaction {
+            kind: "burn".to_string(),
+            mint: None,
+            burn: Some(Icrc3Burn {
+                from: tx.from.clone(),
+                amount: tx.amount as u128,
+                memo: tx.memo.clone(),
+                created_at_time: Some(tx.timestamp),
+            }),
+            transfer: None,
+            approve: None,
+            timestamp: tx.timestamp,
+        }
+    } else {
+        // Transfer transaction
+        Icrc3Transaction {
+            kind: "transfer".to_string(),
+            mint: None,
+            burn: None,
+            transfer: Some(Icrc3Transfer {
+                from: tx.from.clone(),
+                to: tx.to.clone(),
+                amount: tx.amount as u128,
+                fee: Some(tx.fee as u128),
+                memo: tx.memo.clone(),
+                created_at_time: Some(tx.timestamp),
+            }),
+            approve: None,
+            timestamp: tx.timestamp,
+        }
+    }
+}
+
 pub fn get_transactions(req: GetTransactionsRequest) -> GetTransactionsResponse {
     read(|state| {
         let start = req.start as usize;
@@ -1157,7 +1260,10 @@ pub fn get_transactions(req: GetTransactionsRequest) -> GetTransactionsResponse 
         let ledger_len = state.ledger.len();
         let end = std::cmp::min(start + length, ledger_len);
 
-        let transactions: Vec<Transaction> = state.ledger[start..end].to_vec();
+        let transactions: Vec<Icrc3Transaction> = state.ledger[start..end]
+            .iter()
+            .map(transaction_to_icrc3)
+            .collect();
 
         GetTransactionsResponse {
             first_index: start as u128,
