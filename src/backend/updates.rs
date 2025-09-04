@@ -733,6 +733,37 @@ fn icrc21_canister_call_consent_message(
     env::token::icrc21_canister_call_consent_message(request)
 }
 
+// ICRC-3 Methods
+use env::token::{
+    BlockType, DataCertificate, GetArchivesRequest, GetArchivesResult, GetBlocksRequest,
+    GetBlocksResponse, GetTransactionsRequest, GetTransactionsResponse,
+};
+
+#[query]
+fn get_transactions(req: GetTransactionsRequest) -> GetTransactionsResponse {
+    env::token::get_transactions(req)
+}
+
+#[query]
+fn icrc3_get_blocks(req: GetBlocksRequest) -> GetBlocksResponse {
+    env::token::icrc3_get_blocks(req)
+}
+
+#[query]
+fn icrc3_get_archives(req: GetArchivesRequest) -> Vec<GetArchivesResult> {
+    env::token::icrc3_get_archives(req)
+}
+
+#[query]
+fn icrc3_get_tip_certificate() -> Option<DataCertificate> {
+    env::token::icrc3_get_tip_certificate()
+}
+
+#[query]
+fn icrc3_supported_block_types() -> Vec<BlockType> {
+    env::token::icrc3_supported_block_types()
+}
+
 #[test]
 fn check_candid_interface_compatibility() {
     use candid_parser::utils::{service_equal, CandidSource};

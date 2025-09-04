@@ -30,7 +30,14 @@ type TransferError = variant {
   TooOld;
   InsufficientFunds : InsufficientFunds;
 };
-type Value = variant { Nat : nat; Text : text };
+type Value = variant { 
+  Nat : nat; 
+  Int : int;
+  Text : text;
+  Blob : vec nat8;
+  Array : vec Value;
+  Map : vec record { text; Value };
+};
 
 // ICRC-2 Types
 type ApproveArgs = record {
@@ -145,6 +152,85 @@ type Icrc21ConsentMessageResponse = variant {
   Ok : Icrc21ConsentInfo;
   Err : Icrc21Error;
 };
+
+// ICRC-3 Types
+type GetBlocksRequest = record {
+  start : nat;
+  length : nat;
+};
+
+type GetBlocksResponse = record {
+  first_index : nat;
+  chain_length : nat64;
+  certificate : opt vec nat8;
+  blocks : vec Value;
+  archived_blocks : vec ArchivedRange;
+};
+
+type ArchivedRange = record {
+  start : nat;
+  length : nat;
+  callback : QueryBlockArchiveFn;
+};
+
+type QueryBlockArchiveFn = record {
+  canister_id : principal;
+  method : text;
+};
+
+type DataCertificate = record {
+  certificate : vec nat8;
+  hash_tree : vec nat8;
+};
+
+type GetArchivesRequest = record {
+  from : opt principal;
+};
+
+type GetArchivesResult = record {
+  canister_id : principal;
+  start : nat;
+  end : nat;
+};
+
+type BlockType = record {
+  block_type : text;
+  url : text;
+};
+
+// The crucial get_transactions types for KongSwap
+type GetTransactionsRequest = record {
+  start : nat;
+  length : nat;
+};
+
+type Transaction = record {
+  from : Account;
+  to : Account;
+  amount : nat64;
+  fee : nat64;
+  timestamp : nat64;
+  memo : opt vec nat8;
+};
+
+type GetTransactionsResponse = record {
+  first_index : nat;
+  log_length : nat64;
+  transactions : vec Transaction;
+  archived_transactions : vec ArchivedTransactionRange;
+};
+
+type ArchivedTransactionRange = record {
+  start : nat;
+  length : nat;
+  callback : QueryArchiveFn;
+};
+
+type QueryArchiveFn = record {
+  canister_id : principal;
+  method : text;
+};
+
 service : () -> {
   add_post : (
       text,
@@ -176,6 +262,14 @@ service : () -> {
   icrc2_allowance : (AllowanceArgs) -> (Allowance) query;
   icrc2_transfer_from : (TransferFromArgs) -> (Result_TransferFromError);
   icrc21_canister_call_consent_message : (Icrc21ConsentMessageRequest) -> (Icrc21ConsentMessageResponse);
+  
+  // ICRC-3 Methods
+  get_transactions : (GetTransactionsRequest) -> (GetTransactionsResponse) query;
+  icrc3_get_blocks : (GetBlocksRequest) -> (GetBlocksResponse) query;
+  icrc3_get_archives : (GetArchivesRequest) -> (vec GetArchivesResult) query;
+  icrc3_get_tip_certificate : () -> (opt DataCertificate) query;
+  icrc3_supported_block_types : () -> (vec BlockType) query;
+  
   link_cold_wallet : (nat64) -> (Result_1);
   prod_release : () -> (bool);
   propose_release : (text, text, vec nat8) -> (Result_4);

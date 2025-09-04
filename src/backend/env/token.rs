@@ -137,7 +137,7 @@ pub struct TransferArgs {
     pub created_at_time: Option<Timestamp>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, CandidType, Clone)]
 pub struct Transaction {
     pub timestamp: u64,
     pub from: Account,
@@ -234,12 +234,14 @@ pub enum TransferFromError {
     GenericError(GenericError),
 }
 
-#[derive(CandidType)]
+#[derive(CandidType, Deserialize)]
 pub enum Value {
     Nat(u128),
     Text(String),
-    // Int(i64),
-    // Blob(Vec<u8>),
+    Int(i128),
+    Blob(Vec<u8>),
+    Array(Vec<Value>),
+    Map(Vec<(String, Value)>),
 }
 
 #[derive(CandidType)]
@@ -313,6 +315,10 @@ pub fn icrc1_supported_standards() -> Vec<Standard> {
         Standard {
             name: "ICRC-2".into(),
             url: "https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-2".into(),
+        },
+        Standard {
+            name: "ICRC-3".into(),
+            url: "https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3".into(),
         },
     ]
 }
@@ -978,6 +984,206 @@ pub fn balances_from_ledger(ledger: &[Transaction]) -> Result<HashMap<Account, T
         }
     }
     Ok(balances)
+}
+
+// ICRC-3 Types and Implementation
+#[derive(CandidType, Deserialize)]
+pub struct GetBlocksRequest {
+    pub start: u128,
+    pub length: u128,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetBlocksResponse {
+    pub first_index: u128,
+    pub chain_length: u64,
+    pub certificate: Option<Vec<u8>>,
+    pub blocks: Vec<Value>,
+    pub archived_blocks: Vec<ArchivedRange>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ArchivedRange {
+    pub start: u128,
+    pub length: u128,
+    pub callback: QueryBlockArchiveFn,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct QueryBlockArchiveFn {
+    pub canister_id: Principal,
+    pub method: String,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct DataCertificate {
+    pub certificate: Vec<u8>,
+    pub hash_tree: Vec<u8>,
+}
+
+// Convert our Transaction type to ICRC-3 block format
+pub fn transaction_to_block(tx: &Transaction, index: u64) -> Value {
+    let mut map = vec![
+        ("btype".to_string(), Value::Text("1xfer".to_string())),
+        ("ts".to_string(), Value::Nat(tx.timestamp as u128)),
+        (
+            "tx".to_string(),
+            Value::Map(vec![
+                ("op".to_string(), Value::Text("xfer".to_string())),
+                ("amt".to_string(), Value::Nat(tx.amount as u128)),
+                ("fee".to_string(), Value::Nat(tx.fee as u128)),
+                (
+                    "from".to_string(),
+                    Value::Blob(tx.from.owner.as_slice().to_vec()),
+                ),
+                (
+                    "to".to_string(),
+                    Value::Blob(tx.to.owner.as_slice().to_vec()),
+                ),
+            ]),
+        ),
+    ];
+
+    // Add memo if present
+    if let Some(ref memo) = tx.memo {
+        if let Some(Value::Map(ref mut tx_fields)) =
+            map.iter_mut().find(|(k, _)| k == "tx").map(|(_, v)| v)
+        {
+            tx_fields.push(("memo".to_string(), Value::Blob(memo.clone())));
+        }
+    }
+
+    // Add block index
+    map.push(("id".to_string(), Value::Nat(index as u128)));
+
+    Value::Map(map)
+}
+
+pub fn icrc3_get_blocks(req: GetBlocksRequest) -> GetBlocksResponse {
+    read(|state| {
+        let start = req.start as usize;
+        let length = std::cmp::min(req.length as usize, 2000); // Max 2000 blocks per request
+
+        let ledger_len = state.ledger.len();
+        let end = std::cmp::min(start + length, ledger_len);
+
+        let blocks: Vec<Value> = state.ledger[start..end]
+            .iter()
+            .enumerate()
+            .map(|(i, tx)| transaction_to_block(tx, (start + i) as u64))
+            .collect();
+
+        GetBlocksResponse {
+            first_index: start as u128,
+            chain_length: ledger_len as u64,
+            certificate: None, // Simple implementation without certification
+            blocks,
+            archived_blocks: vec![], // No archiving in simple implementation
+        }
+    })
+}
+
+pub fn icrc3_get_archives(_req: GetArchivesRequest) -> Vec<GetArchivesResult> {
+    vec![] // No archives in simple implementation
+}
+
+pub fn icrc3_get_tip_certificate() -> Option<DataCertificate> {
+    None // Simple implementation without certification
+}
+
+pub fn icrc3_supported_block_types() -> Vec<BlockType> {
+    vec![
+        BlockType {
+            block_type: "1xfer".to_string(),
+            url: "https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-1/README.md"
+                .to_string(),
+        },
+        BlockType {
+            block_type: "2approve".to_string(),
+            url: "https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-2/README.md"
+                .to_string(),
+        },
+        BlockType {
+            block_type: "2xfer".to_string(),
+            url: "https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-2/README.md"
+                .to_string(),
+        },
+        BlockType {
+            block_type: "1mint".to_string(),
+            url: "https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-1/README.md"
+                .to_string(),
+        },
+        BlockType {
+            block_type: "1burn".to_string(),
+            url: "https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-1/README.md"
+                .to_string(),
+        },
+    ]
+}
+
+// The crucial get_transactions method that KongSwap expects
+#[derive(CandidType, Deserialize)]
+pub struct GetTransactionsRequest {
+    pub start: u128,
+    pub length: u128,
+}
+
+#[derive(CandidType)]
+pub struct GetTransactionsResponse {
+    pub first_index: u128,
+    pub log_length: u64,
+    pub transactions: Vec<Transaction>,
+    pub archived_transactions: Vec<ArchivedTransactionRange>,
+}
+
+#[derive(CandidType)]
+pub struct ArchivedTransactionRange {
+    pub start: u128,
+    pub length: u128,
+    pub callback: QueryArchiveFn,
+}
+
+#[derive(CandidType)]
+pub struct QueryArchiveFn {
+    pub canister_id: Principal,
+    pub method: String,
+}
+
+pub fn get_transactions(req: GetTransactionsRequest) -> GetTransactionsResponse {
+    read(|state| {
+        let start = req.start as usize;
+        let length = std::cmp::min(req.length as usize, 2000); // Max 2000 transactions per request
+
+        let ledger_len = state.ledger.len();
+        let end = std::cmp::min(start + length, ledger_len);
+
+        let transactions: Vec<Transaction> = state.ledger[start..end].to_vec();
+
+        GetTransactionsResponse {
+            first_index: start as u128,
+            log_length: ledger_len as u64,
+            transactions,
+            archived_transactions: vec![], // No archiving in simple implementation
+        }
+    })
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetArchivesRequest {
+    pub from: Option<Principal>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetArchivesResult {
+    pub canister_id: Principal,
+    pub start: u128,
+    pub end: u128,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct BlockType {
+    pub block_type: String,
+    pub url: String,
 }
 
 #[cfg(test)]
