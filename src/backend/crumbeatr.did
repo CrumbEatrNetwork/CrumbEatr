@@ -217,10 +217,9 @@ type GetTransactionsRequest = record {
 // ICRC-3 Transaction Types
 type Icrc3Transaction = record {
   kind : text;
-  mint : opt Icrc3Mint;
-  burn : opt Icrc3Burn;
-  transfer : opt Icrc3Transfer;
-  approve : opt Icrc3Approve;
+  icrc1_mint : opt Icrc3Mint;
+  icrc1_burn : opt Icrc3Burn;
+  icrc1_transfer : opt Icrc3Transfer;
   timestamp : nat64;
 };
 
@@ -247,20 +246,10 @@ type Icrc3Burn = record {
   created_at_time : opt nat64;
 };
 
-type Icrc3Approve = record {
-  from : Account;
-  spender : Account;
-  amount : nat;
-  expected_allowance : opt nat;
-  expires_at : opt nat64;
-  fee : opt nat;
-  memo : opt vec nat8;
-  created_at_time : opt nat64;
-};
 
 type GetTransactionsResponse = record {
   first_index : nat;
-  log_length : nat64;
+  log_length : nat;
   transactions : vec Icrc3Transaction;
   archived_transactions : vec ArchivedTransactionRange;
 };

@@ -1131,7 +1131,7 @@ pub struct GetTransactionsRequest {
 #[derive(CandidType)]
 pub struct GetTransactionsResponse {
     pub first_index: u128,
-    pub log_length: u64,
+    pub log_length: u128,
     pub transactions: Vec<Icrc3Transaction>,
     pub archived_transactions: Vec<ArchivedTransactionRange>,
 }
@@ -1140,10 +1140,9 @@ pub struct GetTransactionsResponse {
 #[derive(CandidType)]
 pub struct Icrc3Transaction {
     pub kind: String,
-    pub mint: Option<Icrc3Mint>,
-    pub burn: Option<Icrc3Burn>,
-    pub transfer: Option<Icrc3Transfer>,
-    pub approve: Option<Icrc3Approve>,
+    pub icrc1_mint: Option<Icrc3Mint>,
+    pub icrc1_burn: Option<Icrc3Burn>,
+    pub icrc1_transfer: Option<Icrc3Transfer>,
     pub timestamp: u64,
 }
 
@@ -1174,18 +1173,6 @@ pub struct Icrc3Burn {
 }
 
 #[derive(CandidType)]
-pub struct Icrc3Approve {
-    pub from: Account,
-    pub spender: Account,
-    pub amount: u128,
-    pub expected_allowance: Option<u128>,
-    pub expires_at: Option<u64>,
-    pub fee: Option<u128>,
-    pub memo: Option<Vec<u8>>,
-    pub created_at_time: Option<u64>,
-}
-
-#[derive(CandidType)]
 pub struct ArchivedTransactionRange {
     pub start: u128,
     pub length: u128,
@@ -1206,39 +1193,37 @@ fn transaction_to_icrc3(tx: &Transaction) -> Icrc3Transaction {
         // Mint transaction
         Icrc3Transaction {
             kind: "mint".to_string(),
-            mint: Some(Icrc3Mint {
+            icrc1_mint: Some(Icrc3Mint {
                 to: tx.to.clone(),
                 amount: tx.amount as u128,
                 memo: tx.memo.clone(),
                 created_at_time: Some(tx.timestamp),
             }),
-            burn: None,
-            transfer: None,
-            approve: None,
+            icrc1_burn: None,
+            icrc1_transfer: None,
             timestamp: tx.timestamp,
         }
     } else if tx.to == minting_account {
         // Burn transaction
         Icrc3Transaction {
             kind: "burn".to_string(),
-            mint: None,
-            burn: Some(Icrc3Burn {
+            icrc1_mint: None,
+            icrc1_burn: Some(Icrc3Burn {
                 from: tx.from.clone(),
                 amount: tx.amount as u128,
                 memo: tx.memo.clone(),
                 created_at_time: Some(tx.timestamp),
             }),
-            transfer: None,
-            approve: None,
+            icrc1_transfer: None,
             timestamp: tx.timestamp,
         }
     } else {
         // Transfer transaction
         Icrc3Transaction {
             kind: "transfer".to_string(),
-            mint: None,
-            burn: None,
-            transfer: Some(Icrc3Transfer {
+            icrc1_mint: None,
+            icrc1_burn: None,
+            icrc1_transfer: Some(Icrc3Transfer {
                 from: tx.from.clone(),
                 to: tx.to.clone(),
                 amount: tx.amount as u128,
@@ -1246,7 +1231,6 @@ fn transaction_to_icrc3(tx: &Transaction) -> Icrc3Transaction {
                 memo: tx.memo.clone(),
                 created_at_time: Some(tx.timestamp),
             }),
-            approve: None,
             timestamp: tx.timestamp,
         }
     }
@@ -1267,7 +1251,7 @@ pub fn get_transactions(req: GetTransactionsRequest) -> GetTransactionsResponse 
 
         GetTransactionsResponse {
             first_index: start as u128,
-            log_length: ledger_len as u64,
+            log_length: ledger_len as u128,
             transactions,
             archived_transactions: vec![], // No archiving in simple implementation
         }
