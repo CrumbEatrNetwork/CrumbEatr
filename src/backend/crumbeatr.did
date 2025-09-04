@@ -198,6 +198,16 @@ type BlockType = record {
   url : text;
 };
 
+// Original Transaction type (still needed for internal API compatibility)  
+type Transaction = record {
+  from : Account;
+  to : Account;
+  amount : nat64;
+  fee : nat64;
+  timestamp : nat64;
+  memo : opt vec nat8;
+};
+
 // The crucial get_transactions types for KongSwap
 type GetTransactionsRequest = record {
   start : nat;
