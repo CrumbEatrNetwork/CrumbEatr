@@ -1140,9 +1140,9 @@ pub struct GetTransactionsResponse {
 #[derive(CandidType)]
 pub struct Icrc3Transaction {
     pub kind: String,
-    pub icrc1_mint: Option<Icrc3Mint>,
-    pub icrc1_burn: Option<Icrc3Burn>,
-    pub icrc1_transfer: Option<Icrc3Transfer>,
+    pub mint: Option<Icrc3Mint>,
+    pub burn: Option<Icrc3Burn>,
+    pub transfer: Option<Icrc3Transfer>,
     pub timestamp: u64,
 }
 
@@ -1193,37 +1193,37 @@ fn transaction_to_icrc3(tx: &Transaction) -> Icrc3Transaction {
         // Mint transaction
         Icrc3Transaction {
             kind: "mint".to_string(),
-            icrc1_mint: Some(Icrc3Mint {
+            mint: Some(Icrc3Mint {
                 to: tx.to.clone(),
                 amount: tx.amount as u128,
                 memo: tx.memo.clone(),
                 created_at_time: Some(tx.timestamp),
             }),
-            icrc1_burn: None,
-            icrc1_transfer: None,
+            burn: None,
+            transfer: None,
             timestamp: tx.timestamp,
         }
     } else if tx.to == minting_account {
         // Burn transaction
         Icrc3Transaction {
             kind: "burn".to_string(),
-            icrc1_mint: None,
-            icrc1_burn: Some(Icrc3Burn {
+            mint: None,
+            burn: Some(Icrc3Burn {
                 from: tx.from.clone(),
                 amount: tx.amount as u128,
                 memo: tx.memo.clone(),
                 created_at_time: Some(tx.timestamp),
             }),
-            icrc1_transfer: None,
+            transfer: None,
             timestamp: tx.timestamp,
         }
     } else {
         // Transfer transaction
         Icrc3Transaction {
             kind: "transfer".to_string(),
-            icrc1_mint: None,
-            icrc1_burn: None,
-            icrc1_transfer: Some(Icrc3Transfer {
+            mint: None,
+            burn: None,
+            transfer: Some(Icrc3Transfer {
                 from: tx.from.clone(),
                 to: tx.to.clone(),
                 amount: tx.amount as u128,

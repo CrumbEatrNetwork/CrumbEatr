@@ -217,9 +217,9 @@ type GetTransactionsRequest = record {
 // ICRC-3 Transaction Types
 type Icrc3Transaction = record {
   kind : text;
-  icrc1_mint : opt Icrc3Mint;
-  icrc1_burn : opt Icrc3Burn;
-  icrc1_transfer : opt Icrc3Transfer;
+  mint : opt Icrc3Mint;
+  burn : opt Icrc3Burn;
+  transfer : opt Icrc3Transfer;
   timestamp : nat64;
 };
 
