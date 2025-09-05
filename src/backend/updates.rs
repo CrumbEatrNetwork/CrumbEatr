@@ -745,6 +745,11 @@ fn get_transactions(req: GetTransactionsRequest) -> GetTransactionsResponse {
 }
 
 #[query]
+fn icrc3_get_transactions(req: GetTransactionsRequest) -> GetTransactionsResponse {
+    env::token::get_transactions(req)
+}
+
+#[query]
 fn icrc3_get_blocks(req: GetBlocksRequest) -> GetBlocksResponse {
     env::token::icrc3_get_blocks(req)
 }

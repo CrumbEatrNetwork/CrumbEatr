@@ -298,7 +298,8 @@ service : () -> {
   icrc21_canister_call_consent_message : (Icrc21ConsentMessageRequest) -> (Icrc21ConsentMessageResponse);
   
   // ICRC-3 Methods
-  get_transactions : (GetTransactionsRequest) -> (GetTransactionsResponse) query;
+  get_transactions : (GetTransactionsRequest) -> (GetTransactionsResponse) query; // KongSwap compatibility
+  icrc3_get_transactions : (GetTransactionsRequest) -> (GetTransactionsResponse) query; // DFINITY standard
   icrc3_get_blocks : (GetBlocksRequest) -> (GetBlocksResponse) query;
   icrc3_get_archives : (GetArchivesRequest) -> (vec GetArchivesResult) query;
   icrc3_get_tip_certificate : () -> (opt DataCertificate) query;
