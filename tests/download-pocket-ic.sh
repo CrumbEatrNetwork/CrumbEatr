@@ -2,6 +2,14 @@
 
 POCKET_IC_VERSION="3.0.1"
 
+# Skip download if pocket-ic already exists
+if [ -f "pocket-ic" ]; then
+  echo "PocketIC already exists, skipping download"
+  chmod +x pocket-ic
+  export POCKET_IC_BIN=$(pwd)/pocket-ic
+  exit 0
+fi
+
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   PLATFORM=linux
 elif [[ "$OSTYPE" == "darwin"* ]]; then
