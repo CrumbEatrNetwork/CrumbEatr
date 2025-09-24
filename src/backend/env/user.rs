@@ -400,16 +400,17 @@ impl User {
     }
 
     pub fn change_rewards<T: ToString>(&mut self, amount: i64, log: T) {
-        let credits_needed = CONFIG.credits_per_xdr.saturating_sub(self.credits());
-        if credits_needed > 0 && amount > 0 && self.rewards() > 0 {
-            self.change_credits(
-                amount as Credits,
-                CreditsDelta::Plus,
-                "credits top-up from rewards",
-            )
-            .expect("couldn't top up credits");
-            return;
-        }
+        // Auto-topup disabled - users must wait for weekly distribution or buy credits with ICP
+        // let credits_needed = CONFIG.credits_per_xdr.saturating_sub(self.credits());
+        // if credits_needed > 0 && amount > 0 && self.rewards() > 0 {
+        //     self.change_credits(
+        //         amount as Credits,
+        //         CreditsDelta::Plus,
+        //         "credits top-up from rewards",
+        //     )
+        //     .expect("couldn't top up credits");
+        //     return;
+        // }
         self.rewards = self.rewards.saturating_add(amount);
         self.add_accounting_log(time(), "RWD".to_string(), amount, log.to_string());
     }
