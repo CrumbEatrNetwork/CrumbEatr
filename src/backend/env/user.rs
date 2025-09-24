@@ -821,51 +821,52 @@ mod tests {
         assert_eq!(mintable_tokens.get(&u4).unwrap(), &7500);
     }
 
-    #[test]
-    fn test_automatic_top_up() {
-        let mut user = User::new(pr(0), 66, 0, Default::default());
-        let e8s_for_one_xdr = 3095_0000;
+    // Auto-topup test disabled since feature was disabled
+    // #[test]
+    // fn test_automatic_top_up() {
+    //     let mut user = User::new(pr(0), 66, 0, Default::default());
+    //     let e8s_for_one_xdr = 3095_0000;
 
-        // no top up triggered
-        user.cycles = 1000;
-        user.rewards = 30;
-        user.change_rewards(30, "");
-        assert_eq!(user.rewards, 60);
-        let mut revenue = 2000_0000;
-        user.top_up_credits_from_revenue(&mut revenue, e8s_for_one_xdr)
-            .unwrap();
-        assert_eq!(revenue, 2000_0000);
-        assert_eq!(user.credits(), 1000);
+    //     // no top up triggered
+    //     user.cycles = 1000;
+    //     user.rewards = 30;
+    //     user.change_rewards(30, "");
+    //     assert_eq!(user.rewards, 60);
+    //     let mut revenue = 2000_0000;
+    //     user.top_up_credits_from_revenue(&mut revenue, e8s_for_one_xdr)
+    //         .unwrap();
+    //     assert_eq!(revenue, 2000_0000);
+    //     assert_eq!(user.credits(), 1000);
 
-        // rewards are enough
-        user.cycles = 980;
-        user.rewards = 30;
-        user.change_rewards(30, "");
-        let mut revenue = 2000_0000;
-        user.top_up_credits_from_revenue(&mut revenue, e8s_for_one_xdr)
-            .unwrap();
-        assert_eq!(revenue, 2000_0000);
-        assert_eq!(user.credits(), 1010);
+    //     // rewards are enough
+    //     user.cycles = 980;
+    //     user.rewards = 30;
+    //     user.change_rewards(30, "");
+    //     let mut revenue = 2000_0000;
+    //     user.top_up_credits_from_revenue(&mut revenue, e8s_for_one_xdr)
+    //         .unwrap();
+    //     assert_eq!(revenue, 2000_0000);
+    //     assert_eq!(user.credits(), 1010);
 
-        // rewards are still enough
-        user.cycles = 0;
-        user.rewards = 3000;
-        user.change_rewards(1010, "");
-        let mut revenue = 2000_0000;
-        user.top_up_credits_from_revenue(&mut revenue, e8s_for_one_xdr)
-            .unwrap();
-        assert_eq!(revenue, 2000_0000);
-        assert_eq!(user.credits(), 1010);
+    //     // rewards are still enough
+    //     user.cycles = 0;
+    //     user.rewards = 3000;
+    //     user.change_rewards(1010, "");
+    //     let mut revenue = 2000_0000;
+    //     user.top_up_credits_from_revenue(&mut revenue, e8s_for_one_xdr)
+    //         .unwrap();
+    //     assert_eq!(revenue, 2000_0000);
+    //     assert_eq!(user.credits(), 1010);
 
-        // rewards are not enough
-        user.cycles = 0;
-        user.rewards = 500;
-        let mut revenue = 2000_0000;
-        user.top_up_credits_from_revenue(&mut revenue, e8s_for_one_xdr)
-            .unwrap();
-        assert_eq!(revenue, 0);
-        assert_eq!(user.credits(), 646);
-    }
+    //     // rewards are not enough
+    //     user.cycles = 0;
+    //     user.rewards = 500;
+    //     let mut revenue = 2000_0000;
+    //     user.top_up_credits_from_revenue(&mut revenue, e8s_for_one_xdr)
+    //         .unwrap();
+    //     assert_eq!(revenue, 0);
+    //     assert_eq!(user.credits(), 646);
+    // }
 
     #[test]
     fn test_change_credits() {
