@@ -24,7 +24,7 @@ export const getTheme = (name: string) => themes[name];
 const themes: { [name: string]: Theme } = {
     black: {
         text: "#EDF0EF",
-        background: "#060606",
+        background: "#000000",
         code: "White",
         clickable: "#FF6B47",
         accent: "#75FBA5",
