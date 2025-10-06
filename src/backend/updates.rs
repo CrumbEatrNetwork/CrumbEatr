@@ -57,6 +57,13 @@ fn post_upgrade() {
     stable_to_heap_core();
     mutate(|state| state.load());
 
+    // Fix existing realm post counts
+    mutate(|state| {
+        for realm in state.realms.values_mut() {
+            realm.num_posts = realm.posts.len();
+        }
+    });
+
     // TODO: DELETE BEFORE THE NEXT RELEASE
     mutate(|state| state.memory.set_block_size(1));
 

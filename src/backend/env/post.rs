@@ -543,6 +543,7 @@ impl Post {
         if let Some(realm) = realm.and_then(|name| state.realms.get_mut(&name)) {
             if parent.is_none() {
                 realm.posts.push(post.id);
+                realm.num_posts += 1;
             }
             realm.last_update = timestamp;
         }
@@ -728,13 +729,18 @@ pub fn change_realm(state: &mut State, root_post_id: PostId, new_realm: Option<S
 
         if let Some(id) = realm {
             let realm = state.realms.get_mut(&id).expect("no realm found");
+            let prev_len = realm.posts.len();
             realm.posts.retain(|id| id != &root_post_id);
+            if realm.posts.len() < prev_len {
+                realm.num_posts = realm.num_posts.saturating_sub(1);
+            }
             realm.last_update = time();
         }
         if let Some(id) = &new_realm {
             let realm = state.realms.get_mut(id).expect("no realm found");
             if root {
                 realm.posts.push(root_post_id);
+                realm.num_posts += 1;
             }
             realm.last_update = time();
         }

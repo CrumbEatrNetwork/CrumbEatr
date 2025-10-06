@@ -392,7 +392,11 @@ impl State {
         let _ = self.charge(user_id, penalty, msg);
         post::change_realm(self, post_id, None);
         let realm = self.realms.get_mut(&realm_id).expect("no realm found");
+        let prev_len = realm.posts.len();
         realm.posts.retain(|id| id != &post_id);
+        if realm.posts.len() < prev_len {
+            realm.num_posts = realm.num_posts.saturating_sub(1);
+        }
         if realm_member {
             self.toggle_realm_membership(user_principal, realm_id);
         }
