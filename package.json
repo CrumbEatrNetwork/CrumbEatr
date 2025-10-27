@@ -17,7 +17,7 @@
         "format:check": "prettier --check ."
     },
     "devDependencies": {
-        "@playwright/test": "1.46.1",
+        "@playwright/test": "^1.56.1",
         "@types/isomorphic-fetch": "0.0.39",
         "@types/react-dom": "19.0.0",
         "buffer": "6.0.3",
@@ -36,7 +36,7 @@
         "typescript": "5.8.3",
         "webpack": "^5.96.1",
         "webpack-cli": "5.1.4",
-        "webpack-dev-server": "5.1.0"
+        "webpack-dev-server": "^5.2.1"
     },
     "browserslist": [
         "last 2 chrome version",
