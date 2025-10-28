@@ -25,7 +25,7 @@ Below is a breakdown of costs.
 | Reacting with ❤️ , 👍, 😢    |                `3` | Gives `2` reward points, burns the rest as a fee.                                                          |
 | Reacting with 🔥, 😂, 🛸, 💯 |               `12` | Gives `10` rewards points, burns the rest as a fee.                                                        |
 | Reacting with ⭐️, ♾️        |               `23` | Gives `20` reward points, burns the rest as a fee.                                                         |
-| Reacting with 👎             |                `3` | Burns `3` credits and rewards of post's author and burns 3 credits of the user.                            |
+| Reacting with 👎             |               `15` | Burns `15` credits of the downvoter. Reduces the post's heat score, affecting its visibility in feeds.     |
 | New realm creation           |      `$realm_cost` | Burns `$realm_cost` credits                                                                                |
 
 Notes:

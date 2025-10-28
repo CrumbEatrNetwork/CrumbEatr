@@ -2399,7 +2399,7 @@ impl State {
 
         let log = format!("reaction to post [{0}](#/post/{0})", post_id);
         // Users initiate a credit transfer for upvotes, but burn their own credits on
-        // downvotes + credits and rewards of the author
+        // downvotes (15 credits)
         if delta < 0 {
             if user_controversial {
                 return Err(
@@ -2419,23 +2419,8 @@ impl State {
             }
 
             let user = self.users.get_mut(&post.user).expect("user not found");
-            user.change_rewards(delta, log.clone());
             user.downvotes.insert(user_id, time);
-            self.charge_in_realm(
-                user_id,
-                delta.unsigned_abs().min(user_credits),
-                post.realm.as_ref(),
-                log.clone(),
-            )?;
-            self.charge_in_realm(
-                post.user,
-                delta
-                    .unsigned_abs()
-                    .min(self.users.get(&post.user).expect("no user found").credits()),
-                post.realm.as_ref(),
-                log,
-            )
-            .expect("couldn't charge user");
+            self.charge_in_realm(user_id, 15, post.realm.as_ref(), log)?;
         } else {
             let mut recipients = vec![post.user];
             if let Some(Extension::Repost(post_id)) = post.extension.as_ref() {
@@ -4262,8 +4247,7 @@ pub(crate) mod tests {
 
             // downvote
             assert!(state.react(p3, post_id, 1, 0).is_ok());
-            let reaction_penalty = 3;
-            rewards_from_reactions -= 3;
+            let reaction_penalty = 0;
             let author = state.users.get(&post_author_id).unwrap();
             let lurker_3 = state.principal_to_user(p3).unwrap();
             assert_eq!(
@@ -4271,10 +4255,10 @@ pub(crate) mod tests {
                 2 * c.credits_per_xdr - c.post_cost - reaction_penalty
             );
             assert_eq!(author.rewards(), rewards_from_reactions);
-            assert_eq!(lurker_3.credits(), c.credits_per_xdr - 3);
+            assert_eq!(lurker_3.credits(), c.credits_per_xdr - 15);
             assert_eq!(
                 state.burned_cycles,
-                (c.post_cost + burned_credits_by_reactions + 2 * 3) as i64
+                (c.post_cost + burned_credits_by_reactions + 15) as i64
             );
 
             Post::create(state, "test".to_string(), &[], p0, 0, Some(0), None, None).unwrap();
@@ -4282,7 +4266,7 @@ pub(crate) mod tests {
             let c = CONFIG;
             assert_eq!(
                 state.burned_cycles,
-                (2 * c.post_cost + burned_credits_by_reactions + 2 * 3) as i64
+                (2 * c.post_cost + burned_credits_by_reactions + 15) as i64
             );
             let author = state.users.get(&post_author_id).unwrap();
             assert_eq!(
