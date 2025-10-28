@@ -149,8 +149,8 @@ mod string {
 pub const CONFIG: &Config = &Config {
     name: "CrumbEatr",
     domains: &[
-        "przbn-baaaa-aaaaj-qnshq-cai.icp0.io",
-        "przbn-baaaa-aaaaj-qnshq-cai.ic0.app",
+        "bpqth-gaaaa-aaaaj-qntfq-cai.icp0.io",
+        "bpqth-gaaaa-aaaaj-qntfq-cai.ic0.app",
     ],
     logo: include_str!("../../frontend/assets/logo.min.svg"),
     staging: "ky6sq-aaaaa-aaaaj-a2fsa-cai.icp0.io",

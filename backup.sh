@@ -50,7 +50,7 @@ fi
 
 fetch() {
     FILE="$1"
-    $QU raw "przbn-baaaa-aaaaj-qnshq-cai" "stable_mem_read" --args "($PAGE:nat64)" --query |\
+    $QU raw "bpqth-gaaaa-aaaaj-qntfq-cai" "stable_mem_read" --args "($PAGE:nat64)" --query |\
         $QU send --yes --raw - > $FILE
 }
 

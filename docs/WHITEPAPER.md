@@ -13,7 +13,7 @@ It operates on the public computing infrastructure powered by the [Internet Comp
 ## Usage Costs
 
 Each interaction with other users on $name consumes credits.
-All payments are directed to [$name's Treasury](https://dashboard.internetcomputer.org/account/dee15d98a70029163c79ace6ec9cf33b21917355f1766f44f87b4cb9f4d3b393) which holds the revenue.
+All payments are directed to [$name's Treasury](https://dashboard.internetcomputer.org/account/1a20a18f4ea185b85cc9bcf11f16e77ab9f69e0ecda51bf8d7e14e6eaf627d2e) which holds the revenue.
 Below is a breakdown of costs.
 
 | Function                     |         credits 🔥 | Comments                                                                                                   |
@@ -177,8 +177,8 @@ $name's DAO has a bug bounty program with classifications and rewards in `$token
 
 | SEV | DESCRIPTION                                                                                                                           | BOUNTY |
 | :-: | ------------------------------------------------------------------------------------------------------------------------------------- | -----: |
-|  0  | Bugs enabling unsanctioned state mutations affecting assets like credits, rewards, tokens, Treasury, or critically endangering $name. | `1000` |
-|  1  | Bugs enabling unsanctioned state mutations affecting data, with moderate impact on decentralization or autonomy.                      |  `400` |
-|  2  | Bugs enabling unsanctioned state mutations without substantial impact on $name.                                                       |  `100` |
+|  0  | Bugs enabling unsanctioned state mutations affecting assets like credits, rewards, tokens, Treasury, or critically endangering $name. |  `500` |
+|  1  | Bugs enabling unsanctioned state mutations affecting data, with moderate impact on decentralization or autonomy.                      |  `200` |
+|  2  | Bugs enabling unsanctioned state mutations without substantial impact on $name.                                                       |   `50` |
 
 Report bugs to arbiters immediately if they fall under any of these categories.

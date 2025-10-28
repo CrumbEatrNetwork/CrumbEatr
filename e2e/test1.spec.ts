@@ -90,7 +90,7 @@ test.describe("Upgrades & token transfer flow", () => {
                 if (
                     dialog.message().includes("Enter the recipient principal")
                 ) {
-                    await dialog.accept("przbn-baaaa-aaaaj-qnshq-cai");
+                    await dialog.accept("bpqth-gaaaa-aaaaj-qntfq-cai");
                 }
                 if (dialog.message().includes("Enter the amount")) {
                     await dialog.accept("5");
@@ -110,9 +110,9 @@ test.describe("Upgrades & token transfer flow", () => {
 
         await expect(page.getByTestId("token-balance")).toHaveText("14.75");
         await page.getByTestId("token-balance").click();
-        await page.getByRole("link", { name: "przbn" }).click();
+        await page.getByRole("link", { name: "bpqth" }).click();
         await expect(
-            page.getByRole("heading", { name: "TRANSACTIONS OF PRZBN" }),
+            page.getByRole("heading", { name: "TRANSACTIONS OF BPQTH" }),
         ).toBeVisible();
         await expect(
             page.getByRole("heading", { name: "BALANCE: 5.00 CRUMB" }),
