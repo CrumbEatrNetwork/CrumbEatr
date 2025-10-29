@@ -141,8 +141,16 @@ pub struct State {
     #[serde(skip)]
     pub balances: HashMap<Account, Token>,
 
-    #[serde(skip)]
+    #[serde(default)]
     pub allowances: HashMap<(Account, Account), token::AllowanceData>,
+
+    // Transaction deduplication: (from, to, amount, created_at_time) -> (tx_index, recorded_at)
+    #[serde(skip)]
+    pub transaction_dedup: HashMap<(Account, Account, u128, u64), (u128, u64)>,
+
+    // Rate limiting: principal -> (request_count, window_start_time)
+    #[serde(skip)]
+    pub rate_limiter: HashMap<Principal, (u64, u64)>,
 
     #[serde(skip)]
     // new principal -> old principal
@@ -1388,6 +1396,10 @@ impl State {
             }
 
             state.compute_tag_subscribers(now);
+
+            // Clean up old transaction deduplication and rate limit records
+            token::prune_old_dedup_records(state, now);
+            token::prune_old_rate_limit_records(state, now);
         });
 
         export_token_supply(token::icrc1_total_supply());

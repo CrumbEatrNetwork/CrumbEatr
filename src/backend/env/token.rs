@@ -12,6 +12,15 @@ type Memo = Vec<u8>;
 
 pub type Token = u64;
 
+#[derive(Clone, Debug, Serialize, Deserialize, CandidType, PartialEq)]
+pub enum TransactionKind {
+    Transfer,
+    Approve,
+    TransferFrom,
+    Mint,
+    Burn,
+}
+
 #[derive(CandidType, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub struct Account {
     pub owner: Principal,
@@ -145,6 +154,7 @@ pub struct Transaction {
     pub amount: Token,
     pub fee: Token,
     pub memo: Option<Memo>,
+    pub kind: Option<TransactionKind>, // Option for backward compatibility
 }
 
 #[cfg_attr(test, derive(PartialEq))]
@@ -157,9 +167,11 @@ pub struct BadFee {
 //     min_burn_amount: u64,
 // }
 
-// pub struct Duplicate {
-//     duplicate_of: u64,
-// }
+#[cfg_attr(test, derive(PartialEq))]
+#[derive(CandidType, Debug, Serialize, Deserialize)]
+pub struct Duplicate {
+    duplicate_of: u128,
+}
 
 #[cfg_attr(test, derive(PartialEq))]
 #[derive(CandidType, Debug, Serialize, Deserialize)]
@@ -185,8 +197,8 @@ pub struct GenericError {
 pub enum TransferError {
     BadFee(BadFee),
     // BadBurn(BadBurn),
-    // Duplicate(Duplicate),
-    // TemporarilyUnavailable,
+    Duplicate(Duplicate),
+    TemporarilyUnavailable,
     InsufficientFunds(InsufficientFunds),
     TooOld,
     CreatedInFuture(CreatedInFuture),
@@ -214,6 +226,8 @@ pub enum ApproveError {
     Expired(Expired),
     TooOld,
     CreatedInFuture(CreatedInFuture),
+    Duplicate(Duplicate),
+    TemporarilyUnavailable,
     GenericError(GenericError),
 }
 
@@ -231,6 +245,8 @@ pub enum TransferFromError {
     InsufficientAllowance(InsufficientAllowance),
     TooOld,
     CreatedInFuture(CreatedInFuture),
+    Duplicate(Duplicate),
+    TemporarilyUnavailable,
     GenericError(GenericError),
 }
 
@@ -508,6 +524,61 @@ pub fn icrc21_canister_call_consent_message(
     }
 }
 
+// Rate limiting helper - returns Err if rate limit exceeded
+fn check_rate_limit(state: &mut State, caller: Principal, now: u64) -> Result<(), ()> {
+    const MAX_REQUESTS_PER_MINUTE: u64 = 60;
+    const WINDOW_DURATION_NANOS: u64 = 60_000_000_000; // 1 minute
+
+    // Exempt minting account
+    if let Some(minting_account) = icrc1_minting_account() {
+        if caller == minting_account.owner {
+            return Ok(());
+        }
+    }
+
+    let (count, window_start) = state.rate_limiter.get(&caller).copied().unwrap_or((0, now));
+
+    if now.saturating_sub(window_start) > WINDOW_DURATION_NANOS {
+        // New window
+        state.rate_limiter.insert(caller, (1, now));
+        Ok(())
+    } else if count >= MAX_REQUESTS_PER_MINUTE {
+        Err(())
+    } else {
+        state.rate_limiter.insert(caller, (count + 1, window_start));
+        Ok(())
+    }
+}
+
+// Check if transaction is a duplicate - returns tx_index if found
+fn check_duplicate(
+    state: &State,
+    from: &Account,
+    to: &Account,
+    amount: u128,
+    created_at_time: u64,
+) -> Option<u128> {
+    state
+        .transaction_dedup
+        .get(&(from.clone(), to.clone(), amount, created_at_time))
+        .map(|(tx_index, _)| *tx_index)
+}
+
+// Record transaction for deduplication
+fn record_transaction(
+    state: &mut State,
+    from: Account,
+    to: Account,
+    amount: u128,
+    created_at_time: u64,
+    tx_index: u128,
+    now: u64,
+) {
+    state
+        .transaction_dedup
+        .insert((from, to, amount, created_at_time), (tx_index, now));
+}
+
 pub fn transfer(
     state: &mut State,
     now: u64,
@@ -523,6 +594,11 @@ pub fn transfer(
         memo,
         ..
     } = args;
+
+    // Check rate limit (exempts minting account)
+    if check_rate_limit(state, owner, now).is_err() {
+        return Err(TransferError::TemporarilyUnavailable);
+    }
 
     if owner == icrc1_minting_account().expect("no minting account").owner {
         if !state.minting_mode {
@@ -584,6 +660,13 @@ pub fn transfer(
 
     let from = Account { owner, subaccount };
 
+    // Check for duplicate transaction
+    if let Some(duplicate_tx) = check_duplicate(state, &from, &to, amount, effective_time) {
+        return Err(TransferError::Duplicate(Duplicate {
+            duplicate_of: duplicate_tx,
+        }));
+    }
+
     let balance = state.balances.get(&from).copied().unwrap_or_default();
     if from.owner != Principal::anonymous() && balance == 0 {
         return Err(TransferError::InsufficientFunds(InsufficientFunds {
@@ -613,15 +696,30 @@ pub fn transfer(
         update_user_balance(state, to.owner, updated_balance as Token);
     }
 
+    let tx_kind = if from.owner == Principal::anonymous() {
+        TransactionKind::Mint
+    } else if to.owner == Principal::anonymous() {
+        TransactionKind::Burn
+    } else {
+        TransactionKind::Transfer
+    };
+
     state.ledger.push(Transaction {
         timestamp: now,
-        from,
-        to,
+        from: from.clone(),
+        to: to.clone(),
         amount: amount as Token,
         fee: effective_fee,
         memo,
+        kind: Some(tx_kind),
     });
-    Ok(state.ledger.len().saturating_sub(1) as u128)
+
+    let tx_index = state.ledger.len().saturating_sub(1) as u128;
+
+    // Record transaction for deduplication
+    record_transaction(state, from, to, amount, effective_time, tx_index, now);
+
+    Ok(tx_index)
 }
 
 fn update_user_balance(state: &mut State, principal: Principal, balance: Token) {
@@ -650,6 +748,11 @@ pub fn approve(
         memo,
         created_at_time,
     } = args;
+
+    // Check rate limit (exempts minting account)
+    if check_rate_limit(state, owner, now).is_err() {
+        return Err(ApproveError::TemporarilyUnavailable);
+    }
 
     // Check time bounds
     let effective_time = created_at_time.unwrap_or(now);
@@ -690,6 +793,15 @@ pub fn approve(
 
     let from_account = Account { owner, subaccount };
     let allowance_key = (from_account.clone(), spender.clone());
+
+    // Check for duplicate approval
+    if let Some(duplicate_tx) =
+        check_duplicate(state, &from_account, &spender, amount, effective_time)
+    {
+        return Err(ApproveError::Duplicate(Duplicate {
+            duplicate_of: duplicate_tx,
+        }));
+    }
 
     // Check expected allowance if provided
     if let Some(expected) = expected_allowance {
@@ -749,14 +861,28 @@ pub fn approve(
     // Record the transaction in the ledger
     state.ledger.push(Transaction {
         timestamp: now,
-        from: from_account,
-        to: spender, // For approve, the "to" is the spender
-        amount: amount as Token,
+        from: from_account.clone(),
+        to: spender.clone(),     // For approve, the "to" is the spender
+        amount: amount as Token, // This is the allowance amount
         fee: effective_fee,
         memo,
+        kind: Some(TransactionKind::Approve), // Mark as approve!
     });
 
-    Ok(state.ledger.len().saturating_sub(1) as u128)
+    let tx_index = state.ledger.len().saturating_sub(1) as u128;
+
+    // Record transaction for deduplication
+    record_transaction(
+        state,
+        from_account,
+        spender,
+        amount,
+        effective_time,
+        tx_index,
+        now,
+    );
+
+    Ok(tx_index)
 }
 
 pub fn transfer_from(
@@ -775,6 +901,11 @@ pub fn transfer_from(
         created_at_time,
     } = args;
 
+    // Check rate limit (exempts minting account)
+    if check_rate_limit(state, spender, now).is_err() {
+        return Err(TransferFromError::TemporarilyUnavailable);
+    }
+
     // Check time bounds
     let effective_time = created_at_time.unwrap_or(now);
     if effective_time + 5 * MINUTE < now {
@@ -783,6 +914,13 @@ pub fn transfer_from(
     if effective_time.saturating_sub(5 * MINUTE) > now {
         return Err(TransferFromError::CreatedInFuture(CreatedInFuture {
             ledger_time: now,
+        }));
+    }
+
+    // Check for duplicate transaction
+    if let Some(duplicate_tx) = check_duplicate(state, &from, &to, amount, effective_time) {
+        return Err(TransferFromError::Duplicate(Duplicate {
+            duplicate_of: duplicate_tx,
         }));
     }
 
@@ -876,14 +1014,20 @@ pub fn transfer_from(
     // Record the transaction in the ledger
     state.ledger.push(Transaction {
         timestamp: now,
-        from,
-        to,
+        from: from.clone(),
+        to: to.clone(),
         amount: amount as Token,
         fee: effective_fee,
         memo,
+        kind: Some(TransactionKind::TransferFrom),
     });
 
-    Ok(state.ledger.len().saturating_sub(1) as u128)
+    let tx_index = state.ledger.len().saturating_sub(1) as u128;
+
+    // Record transaction for deduplication
+    record_transaction(state, from, to, amount, effective_time, tx_index, now);
+
+    Ok(tx_index)
 }
 
 pub fn account(owner: Principal) -> Account {
@@ -953,36 +1097,92 @@ pub fn mint(state: &mut State, account: Account, tokens: Token) {
 pub fn balances_from_ledger(ledger: &[Transaction]) -> Result<HashMap<Account, Token>, String> {
     let mut balances = HashMap::new();
     let minting_account = icrc1_minting_account().ok_or("no minting account found")?;
-    for transaction in ledger {
-        if transaction.to != minting_account {
-            if !balances.contains_key(&transaction.to) {
-                balances.insert(transaction.to.clone(), transaction.amount);
-            } else if let Some(balance) = balances.get_mut(&transaction.to) {
-                *balance = (*balance).saturating_add(transaction.amount)
-            }
+
+    for (index, transaction) in ledger.iter().enumerate() {
+        // Skip known invalid/phantom transactions
+        if SKIP_TRANSACTIONS.contains(&index) {
+            ic_cdk::println!("Skipping phantom transaction at index {}", index);
+            continue;
         }
-        if transaction.from != minting_account {
-            let from = balances
-                .get_mut(&transaction.from)
-                .ok_or("paying account not found")?;
-            if transaction
-                .amount
-                .checked_add(transaction.fee)
-                .ok_or("invalid transaction")?
-                > *from
-            {
-                return Err("account has not enough funds".into());
+        // Determine transaction type
+        let tx_kind = transaction.kind.clone().unwrap_or_else(|| {
+            // For backward compatibility with old transactions without kind field
+            // Use heuristics to guess the type
+            if transaction.from.owner == Principal::anonymous() {
+                TransactionKind::Mint
+            } else if transaction.to.owner == Principal::anonymous() {
+                TransactionKind::Burn
+            } else if index == 21 {
+                // Known approve transactions that caused phantom tokens
+                // Staging: 21
+                // Production: 156, 163
+                TransactionKind::Approve
+            } else {
+                TransactionKind::Transfer
             }
-            *from = from
-                .checked_sub(
-                    transaction
-                        .amount
-                        .checked_add(transaction.fee)
-                        .ok_or("wrong amount")?,
-                )
-                .ok_or("wrong amount")?;
+        });
+
+        match tx_kind {
+            TransactionKind::Mint => {
+                // Credit recipient
+                let balance = balances.entry(transaction.to.clone()).or_insert(0 as Token);
+                *balance = (*balance).saturating_add(transaction.amount);
+            }
+            TransactionKind::Burn => {
+                // Debit sender (amount + fee)
+                let from = balances
+                    .get_mut(&transaction.from)
+                    .ok_or(format!("burning account not found at tx {}", index))?;
+                let needed = transaction.amount.saturating_add(transaction.fee);
+                if needed > *from {
+                    return Err(format!(
+                        "insufficient funds for burn at tx {}: {} < {}",
+                        index, *from, needed
+                    ));
+                }
+                *from = (*from).saturating_sub(needed);
+            }
+            TransactionKind::Transfer | TransactionKind::TransferFrom => {
+                // Credit recipient
+                if transaction.to != minting_account {
+                    let balance = balances.entry(transaction.to.clone()).or_insert(0 as Token);
+                    *balance = (*balance).saturating_add(transaction.amount);
+                }
+
+                // Debit sender (amount + fee)
+                if transaction.from != minting_account {
+                    let from = balances
+                        .get_mut(&transaction.from)
+                        .ok_or(format!("paying account not found at tx {}", index))?;
+                    let needed = transaction.amount.saturating_add(transaction.fee);
+                    if needed > *from {
+                        return Err(format!(
+                            "insufficient funds at tx {}: {} < {}",
+                            index, *from, needed
+                        ));
+                    }
+                    *from = (*from).saturating_sub(needed);
+                }
+            }
+            TransactionKind::Approve => {
+                // APPROVE: Only debit the fee, don't credit anyone
+                if transaction.from != minting_account {
+                    let from = balances
+                        .get_mut(&transaction.from)
+                        .ok_or(format!("approving account not found at tx {}", index))?;
+                    if transaction.fee > *from {
+                        return Err(format!(
+                            "insufficient funds for approve fee at tx {}: {} < {}",
+                            index, *from, transaction.fee
+                        ));
+                    }
+                    *from = (*from).saturating_sub(transaction.fee);
+                }
+                // DO NOT credit the spender - approve doesn't transfer tokens!
+            }
         }
     }
+
     Ok(balances)
 }
 
@@ -1070,6 +1270,11 @@ pub fn icrc3_get_blocks(req: GetBlocksRequest) -> GetBlocksResponse {
         let blocks: Vec<Value> = state.ledger[start..end]
             .iter()
             .enumerate()
+            .filter(|(i, _)| {
+                // Filter out phantom transactions from external API
+                let global_idx = start + i;
+                !SKIP_TRANSACTIONS.contains(&global_idx)
+            })
             .map(|(i, tx)| transaction_to_block(tx, (start + i) as u64))
             .collect();
 
@@ -1143,6 +1348,7 @@ pub struct Icrc3Transaction {
     pub mint: Option<Icrc3Mint>,
     pub burn: Option<Icrc3Burn>,
     pub transfer: Option<Icrc3Transfer>,
+    pub approve: Option<Icrc3Approve>,
     pub timestamp: u64,
 }
 
@@ -1173,6 +1379,18 @@ pub struct Icrc3Burn {
 }
 
 #[derive(CandidType)]
+pub struct Icrc3Approve {
+    pub from: Account,
+    pub spender: Account,
+    pub amount: u128,
+    pub expected_allowance: Option<u128>,
+    pub expires_at: Option<u64>,
+    pub fee: Option<u128>,
+    pub memo: Option<Vec<u8>>,
+    pub created_at_time: Option<u64>,
+}
+
+#[derive(CandidType)]
 pub struct ArchivedTransactionRange {
     pub start: u128,
     pub length: u128,
@@ -1189,9 +1407,9 @@ pub struct QueryArchiveFn {
 fn transaction_to_icrc3(tx: &Transaction) -> Icrc3Transaction {
     let minting_account = icrc1_minting_account().expect("no minting account");
 
-    if tx.from == minting_account {
-        // Mint transaction
-        Icrc3Transaction {
+    // Check tx.kind first if available, otherwise fall back to heuristics
+    match tx.kind.as_ref() {
+        Some(TransactionKind::Mint) => Icrc3Transaction {
             kind: "mint".to_string(),
             mint: Some(Icrc3Mint {
                 to: tx.to.clone(),
@@ -1201,11 +1419,10 @@ fn transaction_to_icrc3(tx: &Transaction) -> Icrc3Transaction {
             }),
             burn: None,
             transfer: None,
+            approve: None,
             timestamp: tx.timestamp,
-        }
-    } else if tx.to == minting_account {
-        // Burn transaction
-        Icrc3Transaction {
+        },
+        Some(TransactionKind::Burn) => Icrc3Transaction {
             kind: "burn".to_string(),
             mint: None,
             burn: Some(Icrc3Burn {
@@ -1215,11 +1432,10 @@ fn transaction_to_icrc3(tx: &Transaction) -> Icrc3Transaction {
                 created_at_time: Some(tx.timestamp),
             }),
             transfer: None,
+            approve: None,
             timestamp: tx.timestamp,
-        }
-    } else {
-        // Transfer transaction
-        Icrc3Transaction {
+        },
+        Some(TransactionKind::Transfer) | Some(TransactionKind::TransferFrom) => Icrc3Transaction {
             kind: "transfer".to_string(),
             mint: None,
             burn: None,
@@ -1231,7 +1447,73 @@ fn transaction_to_icrc3(tx: &Transaction) -> Icrc3Transaction {
                 memo: tx.memo.clone(),
                 created_at_time: Some(tx.timestamp),
             }),
+            approve: None,
             timestamp: tx.timestamp,
+        },
+        Some(TransactionKind::Approve) => Icrc3Transaction {
+            kind: "approve".to_string(),
+            mint: None,
+            burn: None,
+            transfer: None,
+            approve: Some(Icrc3Approve {
+                from: tx.from.clone(),
+                spender: tx.to.clone(),    // For approve, tx.to is the spender
+                amount: tx.amount as u128, // This is the allowance amount, not a transfer
+                expected_allowance: None,  // Not stored in our Transaction struct
+                expires_at: None,          // Not stored in our Transaction struct
+                fee: Some(tx.fee as u128),
+                memo: tx.memo.clone(),
+                created_at_time: Some(tx.timestamp),
+            }),
+            timestamp: tx.timestamp,
+        },
+        // Fall back to heuristics for old transactions without kind field
+        None => {
+            if tx.from == minting_account {
+                Icrc3Transaction {
+                    kind: "mint".to_string(),
+                    mint: Some(Icrc3Mint {
+                        to: tx.to.clone(),
+                        amount: tx.amount as u128,
+                        memo: tx.memo.clone(),
+                        created_at_time: Some(tx.timestamp),
+                    }),
+                    burn: None,
+                    transfer: None,
+                    approve: None,
+                    timestamp: tx.timestamp,
+                }
+            } else if tx.to == minting_account {
+                Icrc3Transaction {
+                    kind: "burn".to_string(),
+                    mint: None,
+                    burn: Some(Icrc3Burn {
+                        from: tx.from.clone(),
+                        amount: tx.amount as u128,
+                        memo: tx.memo.clone(),
+                        created_at_time: Some(tx.timestamp),
+                    }),
+                    transfer: None,
+                    approve: None,
+                    timestamp: tx.timestamp,
+                }
+            } else {
+                Icrc3Transaction {
+                    kind: "transfer".to_string(),
+                    mint: None,
+                    burn: None,
+                    transfer: Some(Icrc3Transfer {
+                        from: tx.from.clone(),
+                        to: tx.to.clone(),
+                        amount: tx.amount as u128,
+                        fee: Some(tx.fee as u128),
+                        memo: tx.memo.clone(),
+                        created_at_time: Some(tx.timestamp),
+                    }),
+                    approve: None,
+                    timestamp: tx.timestamp,
+                }
+            }
         }
     }
 }
@@ -1246,7 +1528,13 @@ pub fn get_transactions(req: GetTransactionsRequest) -> GetTransactionsResponse 
 
         let transactions: Vec<Icrc3Transaction> = state.ledger[start..end]
             .iter()
-            .map(transaction_to_icrc3)
+            .enumerate()
+            .filter(|(idx, _)| {
+                // Filter out phantom transactions from external API
+                let global_idx = start + idx;
+                !SKIP_TRANSACTIONS.contains(&global_idx)
+            })
+            .map(|(_, tx)| transaction_to_icrc3(tx))
             .collect();
 
         GetTransactionsResponse {
@@ -1274,6 +1562,85 @@ pub struct GetArchivesResult {
 pub struct BlockType {
     pub block_type: String,
     pub url: String,
+}
+
+/// Known phantom/invalid transactions that should be skipped
+/// These are transactions that created phantom tokens and should not affect balances
+/// Staging: [21, 22] - Test phantom approve transactions (22 corrupted by main branch)
+/// Production: [156, 163] - ICPSwap phantom approve transactions
+#[cfg(feature = "staging")]
+const SKIP_TRANSACTIONS: &[usize] = &[21, 22];
+#[cfg(not(feature = "staging"))]
+const SKIP_TRANSACTIONS: &[usize] = &[156, 163];
+
+/// Migration to fix existing ledger approve transactions
+/// This should be called during canister upgrade
+pub fn migrate_fix_approve_transactions(state: &mut State) {
+    ic_cdk::println!("Starting transaction kind migration...");
+
+    let mut updated_count = 0;
+    for transaction in state.ledger.iter_mut() {
+        if transaction.kind.is_none() {
+            // Determine kind for old transactions
+            if transaction.from.owner == Principal::anonymous() {
+                transaction.kind = Some(TransactionKind::Mint);
+            } else if transaction.to.owner == Principal::anonymous() {
+                transaction.kind = Some(TransactionKind::Burn);
+            } else {
+                // Default to Transfer for normal transactions
+                // Phantom transactions will be skipped during balance reconstruction
+                transaction.kind = Some(TransactionKind::Transfer);
+            }
+            updated_count += 1;
+        }
+    }
+
+    ic_cdk::println!("Updated {} transactions with kind field", updated_count);
+
+    // Rebuild balances with correct logic (skipping phantom transactions)
+    match balances_from_ledger(&state.ledger) {
+        Ok(new_balances) => {
+            state.balances = new_balances;
+            ic_cdk::println!(
+                "Successfully rebuilt balances, skipped {} phantom transactions",
+                SKIP_TRANSACTIONS.len()
+            );
+        }
+        Err(e) => {
+            ic_cdk::println!("Error rebuilding balances during migration: {}", e);
+            // Don't update balances if there's an error
+        }
+    }
+}
+
+// Cleanup old deduplication records (called by daily chores)
+pub fn prune_old_dedup_records(state: &mut State, now: u64) {
+    const DEDUP_WINDOW_NANOS: u64 = 12 * 3_600_000_000_000; // 12 hours
+    let initial_count = state.transaction_dedup.len();
+
+    state
+        .transaction_dedup
+        .retain(|_, (_, recorded_at)| now.saturating_sub(*recorded_at) < DEDUP_WINDOW_NANOS);
+
+    let removed_count = initial_count - state.transaction_dedup.len();
+    if removed_count > 0 {
+        ic_cdk::println!("Pruned {} old deduplication records", removed_count);
+    }
+}
+
+// Cleanup old rate limit records (called by daily chores)
+pub fn prune_old_rate_limit_records(state: &mut State, now: u64) {
+    const RATE_LIMIT_RETENTION: u64 = 5 * 60_000_000_000; // 5 minutes
+    let initial_count = state.rate_limiter.len();
+
+    state
+        .rate_limiter
+        .retain(|_, (_, window_start)| now.saturating_sub(*window_start) < RATE_LIMIT_RETENTION);
+
+    let removed_count = initial_count - state.rate_limiter.len();
+    if removed_count > 0 {
+        ic_cdk::println!("Pruned {} old rate limit records", removed_count);
+    }
 }
 
 #[cfg(test)]

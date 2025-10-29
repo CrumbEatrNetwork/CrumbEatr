@@ -1,5 +1,6 @@
 type Account = record { owner : principal; subaccount : opt vec nat8 };
 type BadFee = record { expected_fee : nat };
+type Duplicate = record { duplicate_of : nat };
 type CreatedInFuture = record { ledger_time : nat64 };
 type GenericError = record { message : text; error_code : nat };
 type HttpRequest = record { url : text; headers : vec record { text; text } };
@@ -26,6 +27,8 @@ type TransferArgs = record {
 type TransferError = variant {
   GenericError : GenericError;
   BadFee : BadFee;
+  Duplicate : Duplicate;
+  TemporarilyUnavailable;
   CreatedInFuture : CreatedInFuture;
   TooOld;
   InsufficientFunds : InsufficientFunds;
@@ -60,6 +63,8 @@ type ApproveError = variant {
   Expired : Expired;
   TooOld;
   CreatedInFuture : CreatedInFuture;
+  Duplicate : Duplicate;
+  TemporarilyUnavailable;
   GenericError : GenericError;
 };
 
@@ -80,6 +85,8 @@ type TransferFromError = variant {
   InsufficientAllowance : InsufficientAllowance;
   TooOld;
   CreatedInFuture : CreatedInFuture;
+  Duplicate : Duplicate;
+  TemporarilyUnavailable;
   GenericError : GenericError;
 };
 
@@ -220,6 +227,7 @@ type Icrc3Transaction = record {
   mint : opt Icrc3Mint;
   burn : opt Icrc3Burn;
   transfer : opt Icrc3Transfer;
+  approve : opt Icrc3Approve;
   timestamp : nat64;
 };
 
@@ -246,6 +254,16 @@ type Icrc3Burn = record {
   created_at_time : opt nat64;
 };
 
+type Icrc3Approve = record {
+  from : Account;
+  spender : Account;
+  amount : nat;
+  expected_allowance : opt nat;
+  expires_at : opt nat64;
+  fee : opt nat;
+  memo : opt vec nat8;
+  created_at_time : opt nat64;
+};
 
 type GetTransactionsResponse = record {
   first_index : nat;

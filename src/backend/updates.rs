@@ -55,6 +55,13 @@ fn post_upgrade() {
         }
     }
     stable_to_heap_core();
+
+    // Fix approve transactions BEFORE state.load() runs!
+    // state.load() calls balances_from_ledger() which needs transactions to have correct kinds
+    mutate(|state| {
+        env::token::migrate_fix_approve_transactions(state);
+    });
+
     mutate(|state| state.load());
 
     set_timer_interval(Duration::from_secs(15 * 60), || {
