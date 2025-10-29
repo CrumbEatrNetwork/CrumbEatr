@@ -8,6 +8,7 @@ import {
     percentage,
     timeAgo,
     token,
+    tokenWithDecimals,
     TokenBalance,
     tokenBalance,
     UserLink,
@@ -61,7 +62,7 @@ export const Tokens = () => {
         loadData();
     }, []);
 
-    const mintedSupply = balances.reduce((acc, balance) => acc + balance[1], 0);
+    const mintedSupply = window.backendCache.stats.circulating_supply;
     const heldByUsers = balances.reduce(
         (acc, [_0, balance, userId]) => (userId == null ? acc : acc + balance),
         0,
@@ -183,7 +184,9 @@ export const Tokens = () => {
                     <div className="db_cell">
                         TOTAL FEES BURNED
                         <code>
-                            {token(window.backendCache.stats.fees_burned)}
+                            {tokenWithDecimals(
+                                window.backendCache.stats.fees_burned,
+                            )}
                         </code>
                     </div>
                 </div>

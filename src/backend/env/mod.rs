@@ -2068,6 +2068,14 @@ impl State {
             .iter()
             .rev()
             .take_while(|tx| tx.timestamp + DAY >= now)
+            .filter(|tx| {
+                // Only include actual token movements, not approvals or burns
+                match &tx.kind {
+                    Some(token::TransactionKind::Approve) => false,
+                    Some(token::TransactionKind::Burn) => false,
+                    _ => true, // Include Transfer, Mint, TransferFrom, and legacy transactions
+                }
+            })
             .map(|tx| tx.amount)
             .sum();
         let volume_week = self
@@ -2075,6 +2083,14 @@ impl State {
             .iter()
             .rev()
             .take_while(|tx| tx.timestamp + WEEK >= now)
+            .filter(|tx| {
+                // Only include actual token movements, not approvals or burns
+                match &tx.kind {
+                    Some(token::TransactionKind::Approve) => false,
+                    Some(token::TransactionKind::Burn) => false,
+                    _ => true, // Include Transfer, Mint, TransferFrom, and legacy transactions
+                }
+            })
             .map(|tx| tx.amount)
             .sum();
         let fees_burned = self.ledger.iter().map(|tx| tx.fee).sum();

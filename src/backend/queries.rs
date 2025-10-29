@@ -1,7 +1,7 @@
 use std::cmp::Reverse;
 use std::collections::BTreeMap;
 
-use crate::env::{token::Token, user::UserFilter};
+use crate::env::{token::Token, token::TransactionKind, user::UserFilter};
 
 use super::*;
 use candid::Principal;
@@ -105,14 +105,31 @@ fn transactions() {
         let owner = Principal::from_text(principal).expect("invalid principal");
         let subaccount = hex::decode(subaccount).expect("invalid subaccount");
         let iter: Box<dyn DoubleEndedIterator<Item = _>> = if Principal::anonymous() == owner {
-            Box::new(iter)
+            Box::new(iter.filter(|(_, t)| {
+                // Filter out Approve and Burn transactions from UI
+                match &t.kind {
+                    Some(TransactionKind::Approve) => false,
+                    Some(TransactionKind::Burn) => false,
+                    _ => true, // Include Transfer, Mint, TransferFrom, and legacy transactions (None)
+                }
+            }))
         } else {
             Box::new(iter.filter(|(_, t)| {
-                t.to.owner == owner
+                // Filter by account ownership
+                let matches_account = t.to.owner == owner
                     && (t.to.subaccount.is_none() || t.to.subaccount.as_ref() == Some(&subaccount))
                     || t.from.owner == owner
                         && (t.from.subaccount.is_none()
-                            || t.from.subaccount.as_ref() == Some(&subaccount))
+                            || t.from.subaccount.as_ref() == Some(&subaccount));
+
+                // Filter out Approve and Burn transactions from UI
+                let is_displayable = match &t.kind {
+                    Some(TransactionKind::Approve) => false,
+                    Some(TransactionKind::Burn) => false,
+                    _ => true, // Include Transfer, Mint, TransferFrom, and legacy transactions (None)
+                };
+
+                matches_account && is_displayable
             }))
         };
         reply(

@@ -566,6 +566,15 @@ export const token = (n: number) =>
         n / Math.pow(10, window.backendCache.config.token_decimals),
     ).toLocaleString();
 
+export const tokenWithDecimals = (n: number) => {
+    const decimals = window.backendCache.config.token_decimals;
+    const value = n / Math.pow(10, decimals);
+    return value.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    });
+};
+
 export const IconToggleButton = ({
     title,
     icon,
