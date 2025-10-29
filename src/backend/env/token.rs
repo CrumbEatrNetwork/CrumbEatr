@@ -1566,12 +1566,12 @@ pub struct BlockType {
 
 /// Known phantom/invalid transactions that should be skipped
 /// These are transactions that created phantom tokens and should not affect balances
-/// Staging: [21, 22] - Test phantom approve transactions (22 corrupted by main branch)
-/// Production: [156, 163] - ICPSwap phantom approve transactions
+/// Staging: [] - Fresh reset, no phantom transactions
+/// Production: [] - Fresh relaunch, no phantom transactions
 #[cfg(feature = "staging")]
-const SKIP_TRANSACTIONS: &[usize] = &[21, 22];
+const SKIP_TRANSACTIONS: &[usize] = &[];
 #[cfg(not(feature = "staging"))]
-const SKIP_TRANSACTIONS: &[usize] = &[156, 163];
+const SKIP_TRANSACTIONS: &[usize] = &[];
 
 /// Migration to fix existing ledger approve transactions
 /// This should be called during canister upgrade
