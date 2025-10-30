@@ -665,6 +665,11 @@ fn icrc1_supported_standards() -> Vec<Standard> {
 }
 
 #[query]
+fn icrc10_supported_standards() -> Vec<Standard> {
+    env::token::icrc1_supported_standards()
+}
+
+#[query]
 fn icrc1_symbol() -> String {
     env::token::icrc1_symbol()
 }
@@ -718,7 +723,7 @@ fn icrc3_get_transactions(req: GetTransactionsRequest) -> GetTransactionsRespons
 }
 
 #[query]
-fn icrc3_get_blocks(req: GetBlocksRequest) -> GetBlocksResponse {
+fn icrc3_get_blocks(req: Vec<GetBlocksRequest>) -> GetBlocksResponse {
     env::token::icrc3_get_blocks(req)
 }
 

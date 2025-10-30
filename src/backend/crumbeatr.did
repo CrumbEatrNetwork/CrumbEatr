@@ -307,6 +307,7 @@ service : () -> {
   icrc1_minting_account : () -> (opt Account) query;
   icrc1_name : () -> (text) query;
   icrc1_supported_standards : () -> (vec Standard) query;
+  icrc10_supported_standards : () -> (vec Standard) query;
   icrc1_symbol : () -> (text) query;
   icrc1_total_supply : () -> (nat) query;
   icrc1_transfer : (TransferArgs) -> (Result_3);
@@ -318,7 +319,7 @@ service : () -> {
   // ICRC-3 Methods
   get_transactions : (GetTransactionsRequest) -> (GetTransactionsResponse) query; // KongSwap compatibility
   icrc3_get_transactions : (GetTransactionsRequest) -> (GetTransactionsResponse) query; // DFINITY standard
-  icrc3_get_blocks : (GetBlocksRequest) -> (GetBlocksResponse) query;
+  icrc3_get_blocks : (vec GetBlocksRequest) -> (GetBlocksResponse) query;
   icrc3_get_archives : (GetArchivesRequest) -> (vec GetArchivesResult) query;
   icrc3_get_tip_certificate : () -> (opt DataCertificate) query;
   icrc3_supported_block_types : () -> (vec BlockType) query;

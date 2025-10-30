@@ -595,6 +595,11 @@ pub fn transfer(
         ..
     } = args;
 
+    // Handle zero amount transfers (Kong compatibility)
+    if amount == 0 {
+        return Ok(0); // Return success with block_id = 0
+    }
+
     // Check rate limit (exempts minting account)
     if check_rate_limit(state, owner, now).is_err() {
         return Err(TransferError::TemporarilyUnavailable);
@@ -901,6 +906,14 @@ pub fn transfer_from(
         created_at_time,
     } = args;
 
+    // Handle zero amount transfers (Kong compatibility - error for transfer_from)
+    if amount == 0 {
+        return Err(TransferFromError::GenericError(GenericError {
+            error_code: 1,
+            message: "Transfer_from amount is zero".to_string(),
+        }));
+    }
+
     // Check rate limit (exempts minting account)
     if check_rate_limit(state, spender, now).is_err() {
         return Err(TransferFromError::TemporarilyUnavailable);
@@ -1187,7 +1200,7 @@ pub fn balances_from_ledger(ledger: &[Transaction]) -> Result<HashMap<Account, T
 }
 
 // ICRC-3 Types and Implementation
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Clone)]
 pub struct GetBlocksRequest {
     pub start: u128,
     pub length: u128,
@@ -1223,43 +1236,70 @@ pub struct DataCertificate {
 
 // Convert our Transaction type to ICRC-3 block format
 pub fn transaction_to_block(tx: &Transaction, index: u64) -> Value {
-    let mut map = vec![
-        ("btype".to_string(), Value::Text("1xfer".to_string())),
-        ("ts".to_string(), Value::Nat(tx.timestamp as u128)),
-        (
-            "tx".to_string(),
-            Value::Map(vec![
-                ("op".to_string(), Value::Text("xfer".to_string())),
-                ("amt".to_string(), Value::Nat(tx.amount as u128)),
-                ("fee".to_string(), Value::Nat(tx.fee as u128)),
-                (
-                    "from".to_string(),
-                    Value::Blob(tx.from.owner.as_slice().to_vec()),
-                ),
-                (
-                    "to".to_string(),
-                    Value::Blob(tx.to.owner.as_slice().to_vec()),
-                ),
-            ]),
-        ),
+    // Determine the operation type based on transaction kind
+    let op = match &tx.kind {
+        Some(TransactionKind::Approve) => "icrc2_approve",
+        Some(TransactionKind::TransferFrom) => "icrc2_transfer_from",
+        Some(TransactionKind::Mint) => "mint",
+        Some(TransactionKind::Burn) => "burn",
+        Some(TransactionKind::Transfer) | None => "icrc1_transfer",
+    };
+
+    // Build transaction fields
+    let mut tx_fields = vec![
+        ("op".to_string(), Value::Text(op.to_string())),
+        ("amt".to_string(), Value::Nat(tx.amount as u128)),
+        ("fee".to_string(), Value::Nat(tx.fee as u128)),
     ];
+
+    // Encode accounts as arrays [principal_blob, subaccount_blob]
+    let from_array = vec![
+        Value::Blob(tx.from.owner.as_slice().to_vec()),
+        if let Some(subaccount) = &tx.from.subaccount {
+            Value::Blob(subaccount.clone())
+        } else {
+            Value::Blob(vec![0u8; 32])
+        },
+    ];
+
+    let to_array = vec![
+        Value::Blob(tx.to.owner.as_slice().to_vec()),
+        if let Some(subaccount) = &tx.to.subaccount {
+            Value::Blob(subaccount.clone())
+        } else {
+            Value::Blob(vec![0u8; 32])
+        },
+    ];
+
+    tx_fields.push(("from".to_string(), Value::Array(from_array)));
+    tx_fields.push(("to".to_string(), Value::Array(to_array)));
 
     // Add memo if present
     if let Some(ref memo) = tx.memo {
-        if let Some(Value::Map(ref mut tx_fields)) =
-            map.iter_mut().find(|(k, _)| k == "tx").map(|(_, v)| v)
-        {
-            tx_fields.push(("memo".to_string(), Value::Blob(memo.clone())));
-        }
+        tx_fields.push(("memo".to_string(), Value::Blob(memo.clone())));
     }
 
-    // Add block index
-    map.push(("id".to_string(), Value::Nat(index as u128)));
-
-    Value::Map(map)
+    // Return properly nested structure: { id: Nat, block: { ts, btype, tx } }
+    Value::Map(vec![
+        ("id".to_string(), Value::Nat(index as u128)),
+        (
+            "block".to_string(),
+            Value::Map(vec![
+                ("ts".to_string(), Value::Nat(tx.timestamp as u128)),
+                ("btype".to_string(), Value::Text("1xfer".to_string())),
+                ("tx".to_string(), Value::Map(tx_fields)),
+            ]),
+        ),
+    ])
 }
 
-pub fn icrc3_get_blocks(req: GetBlocksRequest) -> GetBlocksResponse {
+pub fn icrc3_get_blocks(reqs: Vec<GetBlocksRequest>) -> GetBlocksResponse {
+    // Kong sends a vector with one request, so we process the first one
+    let req = reqs.first().cloned().unwrap_or(GetBlocksRequest {
+        start: 0,
+        length: 0,
+    });
+
     read(|state| {
         let start = req.start as usize;
         let length = std::cmp::min(req.length as usize, 2000); // Max 2000 blocks per request
