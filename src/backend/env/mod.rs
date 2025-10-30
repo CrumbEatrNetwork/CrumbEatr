@@ -1406,7 +1406,7 @@ impl State {
     }
 
     fn archive_cold_data(&mut self) -> Result<(), String> {
-        let max_posts_in_heap = 10_000;
+        let max_posts_in_heap = 8_000;
         archive_cold_posts(self, max_posts_in_heap)
     }
 
@@ -1459,9 +1459,9 @@ impl State {
             mutate(|state| state.last_daily_chores += DAY);
         }
 
-        if last_hourly_chores + HOUR < now {
+        if last_hourly_chores + 30 * MINUTE < now {
             State::hourly_chores(now).await;
-            mutate(|state| state.last_hourly_chores += HOUR);
+            mutate(|state| state.last_hourly_chores += 30 * MINUTE);
         }
     }
 
