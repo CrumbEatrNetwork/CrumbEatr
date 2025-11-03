@@ -58,11 +58,8 @@ impl Api {
     }
 
     pub fn read<T: DeserializeOwned>(&self, offset: u64, len: u64) -> T {
-        let mut bytes = Vec::with_capacity(len as usize);
-        bytes.spare_capacity_mut();
-        unsafe {
-            bytes.set_len(len as usize);
-        }
+        // Security fix: Initialize memory before use to prevent reading uninitialized data
+        let mut bytes = vec![0u8; len as usize];
         (self.read_bytes.as_ref().expect("no reader"))(offset, &mut bytes);
         serde_cbor::from_slice(&bytes).expect("couldn't deserialize")
     }
@@ -78,11 +75,13 @@ impl Memory {
     }
 
     pub fn set_block_size(&mut self, n: u64) {
+        #[cfg(debug_assertions)]
         ic_cdk::println!(
             "old allocation block size: {}",
             self.api_ref.borrow().allocator.block_size_bytes
         );
         self.api_ref.borrow_mut().allocator.block_size_bytes = n;
+        #[cfg(debug_assertions)]
         ic_cdk::println!(
             "new allocation block size: {}",
             self.api_ref.borrow().allocator.block_size_bytes
@@ -153,6 +152,7 @@ pub fn heap_address() -> (u64, u64) {
 
 pub fn stable_to_heap() -> super::State {
     let (offset, len) = heap_address();
+    #[cfg(debug_assertions)]
     ic_cdk::println!("Reading heap from coordinates: {:?}", (offset, len));
     let api = Api::default();
     let mut state: super::State = api.read(offset, len);

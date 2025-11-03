@@ -57,6 +57,7 @@ export const Header = ({
     React.useEffect(() => {
         const logo = document.getElementById("logo");
         if (!logo) return;
+        // Safe to use innerHTML: logo comes from backend CONFIG constant, not user input
         logo.innerHTML = window.backendCache.config.logo;
     }, []);
     React.useEffect(() => {

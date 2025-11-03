@@ -162,12 +162,8 @@ fn read_blob(offset: u64, len: u64) -> Result<Vec<u8>, &'static str> {
     if len > MAX_BLOB_SIZE {
         return Err("blob length is too large");
     }
-    let mut buf = Vec::with_capacity(len as usize);
-    buf.spare_capacity_mut();
-    unsafe {
-        // SAFETY: The length is equal to the capacity.
-        buf.set_len(len as usize);
-    }
+    // Security fix: Initialize memory before use to prevent reading uninitialized data
+    let mut buf = vec![0u8; len as usize];
     stable_read(offset, &mut buf);
     Ok(buf)
 }

@@ -1,6 +1,7 @@
 body {
     user-select: none;
     -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
     margin-top: 0.5em;
     min-height: 100vh;
     display: flex;
@@ -28,6 +29,10 @@ code {
         -apple-system,
         "Arial",
         sans-serif;
+}
+
+* {
+    -webkit-tap-highlight-color: transparent;
 }
 
 .db_cell {

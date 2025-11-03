@@ -567,11 +567,8 @@ fn stable_mem_read(page: u64) -> Vec<(u64, Blob)> {
         return Default::default();
     }
     let chunk_size = (BACKUP_PAGE_SIZE as u64).min(memory_end - offset) as usize;
-    let mut buf = Vec::with_capacity(chunk_size);
-    buf.spare_capacity_mut();
-    unsafe {
-        buf.set_len(chunk_size);
-    }
+    // Security fix: Initialize memory before use to prevent reading uninitialized data
+    let mut buf = vec![0u8; chunk_size];
     api::stable::stable_read(offset, &mut buf);
     vec![(page, ByteBuf::from(buf))]
 }

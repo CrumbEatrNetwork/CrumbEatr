@@ -3,20 +3,17 @@ use base64::{engine::general_purpose, Engine as _};
 use ic_certified_map::{labeled, labeled_hash, AsHashTree, Hash, RbTree};
 use serde_bytes::ByteBuf;
 use sha2::{Digest, Sha256};
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 pub type Headers = Vec<(String, String)>;
 
 const LABEL: &[u8] = b"http_assets";
-static mut ASSET_HASHES: Option<RbTree<Vec<u8>, Hash>> = None;
-static mut ASSETS: Option<HashMap<String, (Headers, Vec<u8>)>> = None;
 
-fn asset_hashes<'a>() -> &'a mut RbTree<Vec<u8>, Hash> {
-    unsafe { ASSET_HASHES.as_mut().expect("uninitialized") }
-}
-
-fn assets<'a>() -> &'a mut HashMap<String, (Headers, Vec<u8>)> {
-    unsafe { ASSETS.as_mut().expect("uninitialized") }
+// Security fix: Replace unsafe static mut with thread-safe pattern
+thread_local! {
+    static ASSET_HASHES: RefCell<RbTree<Vec<u8>, Hash>> = RefCell::new(Default::default());
+    static ASSETS: RefCell<HashMap<String, (Headers, Vec<u8>)>> = RefCell::new(Default::default());
 }
 
 pub static INDEX_HTML: &[u8] = include_bytes!("../../dist/frontend/index.html");
@@ -28,10 +25,7 @@ pub fn index_html_headers() -> Headers {
 }
 
 pub fn load() {
-    unsafe {
-        ASSET_HASHES = Some(Default::default());
-        ASSETS = Some(Default::default());
-    }
+    // Thread-local storage is automatically initialized, no unsafe needed
 
     add_asset(
         &["/", "/index.html"],
@@ -158,7 +152,9 @@ pub fn load() {
         domains.join("\n").as_bytes().to_vec(),
     );
 
-    set_certified_data(&labeled_hash(LABEL, &asset_hashes().root_hash()));
+    ASSET_HASHES.with(|hashes| {
+        set_certified_data(&labeled_hash(LABEL, &hashes.borrow().root_hash()));
+    });
 }
 
 #[allow(unused_variables)]
@@ -166,7 +162,9 @@ pub fn set_certified_data(data: &[u8]) {
     #[cfg(test)]
     return;
     #[cfg(not(test))]
-    ic_cdk::api::set_certified_data(&labeled_hash(LABEL, &asset_hashes().root_hash()));
+    ASSET_HASHES.with(|hashes| {
+        ic_cdk::api::set_certified_data(&labeled_hash(LABEL, &hashes.borrow().root_hash()));
+    });
 }
 
 fn add_asset(paths: &[&str], headers: Headers, bytes: Vec<u8>) {
@@ -174,8 +172,14 @@ fn add_asset(paths: &[&str], headers: Headers, bytes: Vec<u8>) {
     hasher.update(&bytes);
     let hash = hasher.finalize().into();
     for path in paths {
-        asset_hashes().insert(path.as_bytes().to_vec(), hash);
-        assets().insert(path.to_string(), (headers.clone(), bytes.clone()));
+        ASSET_HASHES.with(|hashes| {
+            hashes.borrow_mut().insert(path.as_bytes().to_vec(), hash);
+        });
+        ASSETS.with(|assets| {
+            assets
+                .borrow_mut()
+                .insert(path.to_string(), (headers.clone(), bytes.clone()));
+        });
     }
 }
 
@@ -186,8 +190,11 @@ pub fn asset_certified(path: &str) -> Option<(Headers, ByteBuf)> {
 }
 
 pub fn asset(path: &str) -> Option<(Headers, ByteBuf)> {
-    let (headers, bytes) = assets().get(path)?;
-    Some((headers.clone(), ByteBuf::from(bytes.as_slice())))
+    ASSETS.with(|assets| {
+        let assets = assets.borrow();
+        let (headers, bytes) = assets.get(path)?;
+        Some((headers.clone(), ByteBuf::from(bytes.as_slice())))
+    })
 }
 
 pub fn export_token_supply(total_supply: u128) {
@@ -203,23 +210,29 @@ pub fn export_token_supply(total_supply: u128) {
                 .to_vec(),
         )
     }
-    set_certified_data(&labeled_hash(LABEL, &asset_hashes().root_hash()));
+    ASSET_HASHES.with(|hashes| {
+        set_certified_data(&labeled_hash(LABEL, &hashes.borrow().root_hash()));
+    });
 }
 
 fn certificate_header(path: &str) -> (String, String) {
     let certificate = ic_cdk::api::data_certificate().expect("no certificate");
-    let witness = asset_hashes().witness(path.as_bytes());
-    let tree = labeled(LABEL, witness);
-    let mut serializer = serde_cbor::ser::Serializer::new(Vec::new());
-    serializer.self_describe().expect("tagging failed");
-    use serde::Serialize;
-    tree.serialize(&mut serializer).expect("couldn't serialize");
+    let cbor_bytes = ASSET_HASHES.with(|hashes| {
+        let hashes_ref = hashes.borrow();
+        let witness = hashes_ref.witness(path.as_bytes());
+        let tree = labeled(LABEL, witness);
+        let mut serializer = serde_cbor::ser::Serializer::new(Vec::new());
+        serializer.self_describe().expect("tagging failed");
+        use serde::Serialize;
+        tree.serialize(&mut serializer).expect("couldn't serialize");
+        serializer.into_inner()
+    });
     (
         "IC-Certificate".to_string(),
         format!(
             "certificate=:{}:, tree=:{}:",
             general_purpose::STANDARD.encode(certificate),
-            general_purpose::STANDARD.encode(serializer.into_inner())
+            general_purpose::STANDARD.encode(cbor_bytes)
         ),
     )
 }

@@ -74,7 +74,7 @@ fn http_request_update(req: HttpRequest) -> HttpResponse {
     route(path)
         .map(|(headers, body)| HttpResponse {
             status_code: 200,
-            headers,
+            headers: add_security_headers(headers),
             body,
             upgrade: None,
         })
@@ -108,7 +108,8 @@ fn http_request(req: HttpRequest) -> HttpResponse {
                 .min(state.proposals.len());
             let limit = usize::from_str(req.raw_query_param("limit").unwrap_or_default())
                 .unwrap_or(1_000_usize);
-            let end = (offset + limit).min(state.proposals.len());
+            // Security fix: Use saturating_add to prevent integer overflow
+            let end = offset.saturating_add(limit).min(state.proposals.len());
 
             let proposal_slice = if let Some(slice) = state.proposals.get(offset..end) {
                 slice
@@ -117,10 +118,10 @@ fn http_request(req: HttpRequest) -> HttpResponse {
             };
             HttpResponse {
                 status_code: 200,
-                headers: vec![(
+                headers: add_security_headers(vec![(
                     "Content-Type".to_string(),
                     "application/json; charset=UTF-8".to_string(),
-                )],
+                )]),
                 body: ByteBuf::from(serde_json::to_vec(&proposal_slice).unwrap_or_default()),
                 upgrade: None,
             }
@@ -129,10 +130,10 @@ fn http_request(req: HttpRequest) -> HttpResponse {
         use base64::{engine::general_purpose, Engine as _};
         read(|s| HttpResponse {
             status_code: 200,
-            headers: vec![(
+            headers: add_security_headers(vec![(
                 "Content-Type".to_string(),
                 "application/json; charset=UTF-8".to_string(),
-            )],
+            )]),
             body: ByteBuf::from(
                 serde_json::to_vec(&Metadata {
                     decimals: CONFIG.token_decimals,
@@ -158,7 +159,7 @@ fn http_request(req: HttpRequest) -> HttpResponse {
     else if let Some((headers, body)) = assets::asset_certified(path) {
         HttpResponse {
             status_code: 200,
-            headers,
+            headers: add_security_headers(headers),
             body,
             upgrade: None,
         }
@@ -170,6 +171,21 @@ fn http_request(req: HttpRequest) -> HttpResponse {
             upgrade: Some(true),
         }
     }
+}
+
+// Security fix: Add security headers (CSP temporarily disabled for debugging)
+fn add_security_headers(mut headers: Headers) -> Headers {
+    // TODO: Re-enable CSP with correct domains for IC boundary nodes
+    // Current issue: IC API calls may go through different domains than content serving
+    // Need to allow: ic0.app, icp0.io, raw.ic0.app, raw.icp0.io, localhost:8080 (dev)
+
+    // X-Frame-Options: Prevent clickjacking
+    headers.push(("X-Frame-Options".to_string(), "DENY".to_string()));
+
+    // X-Content-Type-Options: Prevent MIME-sniffing
+    headers.push(("X-Content-Type-Options".to_string(), "nosniff".to_string()));
+
+    headers
 }
 
 fn route(path: &str) -> Option<(Headers, ByteBuf)> {

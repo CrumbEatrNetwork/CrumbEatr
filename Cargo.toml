@@ -8,3 +8,5 @@ members = [
 [profile.release]
 lto = true
 opt-level = 2
+# Security: Enable overflow checks to prevent silent integer wrapping
+overflow-checks = true
