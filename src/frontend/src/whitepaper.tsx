@@ -20,8 +20,8 @@ export const Whitepaper = () => {
             else if (key == "usd_per_xdr") value = USD_PER_XDR;
             else if (key == "vesting_tokens_y")
                 value = tokenBalance(team_tokens[0]);
-            else if (key == "vesting_tokens_s")
-                value = tokenBalance(team_tokens[1]);
+            else if (key == "vesting_tokens_b")
+                value = tokenBalance(team_tokens[2]);
             else if (key == "active_user_share_for_minting_promille")
                 value = value / 10;
             else if (key == "fee")

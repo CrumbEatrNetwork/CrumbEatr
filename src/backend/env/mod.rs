@@ -1152,7 +1152,7 @@ impl State {
         }
 
         // Mint team tokens
-        for (user_id, user_name, user_principal, user_balance) in [0, 1]
+        for (user_id, user_name, user_principal, user_balance) in [0, 2]
             .iter()
             .filter_map(|id| {
                 self.users.get(id).map(|user| {

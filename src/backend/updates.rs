@@ -44,9 +44,33 @@ fn pre_upgrade() {
     mutate(env::memory::heap_to_stable)
 }
 
+/// Synchronous post-upgrade fixtures for version-specific migrations
+fn sync_post_upgrade_fixtures() {
+    // Initialize team_tokens HashMap if empty
+    mutate(|state| {
+        if state.team_tokens.is_empty() {
+            // 18% of max supply for user 0 (Y)
+            state
+                .team_tokens
+                .insert(0, CONFIG.maximum_supply * 18 / 100);
+            // 2% of max supply for user 2 (Blueshirtguy)
+            state.team_tokens.insert(2, CONFIG.maximum_supply * 2 / 100);
+            ic_cdk::println!("Initialized team_tokens: user 0 = 18M, user 2 = 2M");
+        }
+    });
+
+    // Future sync migrations go here
+}
+
+/// Asynchronous post-upgrade fixtures for version-specific migrations
+async fn async_post_upgrade_fixtures() {
+    // Future async migrations go here
+    // Examples: inter-canister calls, external data fetching, etc.
+}
+
 #[post_upgrade]
 fn post_upgrade() {
-    // This should prevent accidental deployments of dev or staging releases.
+    // 1. Safety check - prevent accidental deployments of dev or staging releases
     #[cfg(any(feature = "dev", feature = "staging"))]
     {
         let ids: &str = include_str!("../../canister_ids.json");
@@ -54,16 +78,17 @@ fn post_upgrade() {
             panic!("dev or staging feature is enabled!")
         }
     }
+
+    // 2. Memory restoration
     stable_to_heap_core();
 
-    // Fix approve transactions BEFORE state.load() runs!
-    // state.load() calls balances_from_ledger() which needs transactions to have correct kinds
-    mutate(|state| {
-        env::token::migrate_fix_approve_transactions(state);
-    });
-
+    // 3. State load (moved before fixtures for safety)
     mutate(|state| state.load());
 
+    // 4. Sync fixtures
+    sync_post_upgrade_fixtures();
+
+    // 5. Timer setup
     set_timer_interval(Duration::from_secs(15 * 60), || {
         spawn(State::chores(api::time()))
     });
@@ -72,10 +97,16 @@ fn post_upgrade() {
         || spawn(State::finalize_upgrade()),
     );
 
-    // post upgrade logic goes here
-    // set_timer(Duration::from_millis(0), move || {
-    //     spawn(post_upgrade_fixtures());
-    // });
+    // 6. Async fixtures
+    set_timer(Duration::from_millis(0), || {
+        spawn(async_post_upgrade_fixtures())
+    });
+
+    // 7. Performance logging
+    ic_cdk::println!(
+        "Post-upgrade spent {}B instructions",
+        performance_counter(0) / 1_000_000_000
+    );
 }
 
 /*
