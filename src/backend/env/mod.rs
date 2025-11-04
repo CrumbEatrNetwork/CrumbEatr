@@ -1459,9 +1459,9 @@ impl State {
             mutate(|state| state.last_daily_chores += DAY);
         }
 
-        if last_hourly_chores + 30 * MINUTE < now {
+        if last_hourly_chores + HOUR < now {
             State::hourly_chores(now).await;
-            mutate(|state| state.last_hourly_chores += 30 * MINUTE);
+            mutate(|state| state.last_hourly_chores += HOUR);
         }
     }
 

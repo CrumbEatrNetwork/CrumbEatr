@@ -46,19 +46,6 @@ fn pre_upgrade() {
 
 /// Synchronous post-upgrade fixtures for version-specific migrations
 fn sync_post_upgrade_fixtures() {
-    // Initialize team_tokens HashMap if empty
-    mutate(|state| {
-        if state.team_tokens.is_empty() {
-            // 18% of max supply for user 0 (Y)
-            state
-                .team_tokens
-                .insert(0, CONFIG.maximum_supply * 18 / 100);
-            // 2% of max supply for user 2 (Blueshirtguy)
-            state.team_tokens.insert(2, CONFIG.maximum_supply * 2 / 100);
-            ic_cdk::println!("Initialized team_tokens: user 0 = 18M, user 2 = 2M");
-        }
-    });
-
     // Future sync migrations go here
 }
 
