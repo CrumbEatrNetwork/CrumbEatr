@@ -1613,46 +1613,6 @@ const SKIP_TRANSACTIONS: &[usize] = &[];
 #[cfg(not(feature = "staging"))]
 const SKIP_TRANSACTIONS: &[usize] = &[];
 
-/// Migration to fix existing ledger approve transactions
-/// This should be called during canister upgrade
-pub fn migrate_fix_approve_transactions(state: &mut State) {
-    ic_cdk::println!("Starting transaction kind migration...");
-
-    let mut updated_count = 0;
-    for transaction in state.ledger.iter_mut() {
-        if transaction.kind.is_none() {
-            // Determine kind for old transactions
-            if transaction.from.owner == Principal::anonymous() {
-                transaction.kind = Some(TransactionKind::Mint);
-            } else if transaction.to.owner == Principal::anonymous() {
-                transaction.kind = Some(TransactionKind::Burn);
-            } else {
-                // Default to Transfer for normal transactions
-                // Phantom transactions will be skipped during balance reconstruction
-                transaction.kind = Some(TransactionKind::Transfer);
-            }
-            updated_count += 1;
-        }
-    }
-
-    ic_cdk::println!("Updated {} transactions with kind field", updated_count);
-
-    // Rebuild balances with correct logic (skipping phantom transactions)
-    match balances_from_ledger(&state.ledger) {
-        Ok(new_balances) => {
-            state.balances = new_balances;
-            ic_cdk::println!(
-                "Successfully rebuilt balances, skipped {} phantom transactions",
-                SKIP_TRANSACTIONS.len()
-            );
-        }
-        Err(e) => {
-            ic_cdk::println!("Error rebuilding balances during migration: {}", e);
-            // Don't update balances if there's an error
-        }
-    }
-}
-
 // Cleanup old deduplication records (called by daily chores)
 pub fn prune_old_dedup_records(state: &mut State, now: u64) {
     const DEDUP_WINDOW_NANOS: u64 = 12 * 3_600_000_000_000; // 12 hours
