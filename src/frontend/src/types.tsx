@@ -194,6 +194,7 @@ export type User = {
         [key: string]: string;
     };
     realms: string[];
+    controlled_realms: string[];
     previous_names: string[];
     report?: Report;
     post_reports: { [id: PostId]: bigint };

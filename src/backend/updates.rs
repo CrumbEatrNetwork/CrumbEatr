@@ -46,7 +46,16 @@ fn pre_upgrade() {
 
 /// Synchronous post-upgrade fixtures for version-specific migrations
 fn sync_post_upgrade_fixtures() {
-    // Future sync migrations go here
+    // Backfill controlled_realms for all existing realm controllers
+    mutate(|state| {
+        for (realm_id, realm) in state.realms.iter() {
+            for user_id in &realm.controllers {
+                if let Some(user) = state.users.get_mut(user_id) {
+                    user.controlled_realms.insert(realm_id.clone());
+                }
+            }
+        }
+    });
 }
 
 /// Asynchronous post-upgrade fixtures for version-specific migrations

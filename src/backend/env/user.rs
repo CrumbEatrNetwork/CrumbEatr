@@ -1,6 +1,7 @@
 use super::{reports::Report, *};
 use ic_ledger_types::{AccountIdentifier, DEFAULT_SUBACCOUNT};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 pub type UserId = u64;
 
@@ -108,6 +109,8 @@ pub struct User {
     pub downvotes: BTreeMap<UserId, Time>,
     pub show_posts_in_realms: bool,
     pub posts: Vec<PostId>,
+    #[serde(default)]
+    pub controlled_realms: HashSet<String>,
 }
 
 impl User {
@@ -179,11 +182,20 @@ impl User {
             governance: true,
             downvotes: Default::default(),
             show_posts_in_realms: true,
+            controlled_realms: Default::default(),
         }
     }
 
     pub fn total_balance(&self) -> Token {
         self.balance + self.cold_balance
+    }
+
+    /// Deactivate user by resetting activity and clearing transient data
+    pub fn deactivate(&mut self) {
+        self.active_weeks = 0;
+        self.notifications.clear();
+        self.accounting.clear();
+        self.draft.take();
     }
 
     pub fn posts<'a>(

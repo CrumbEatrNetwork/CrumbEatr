@@ -484,7 +484,8 @@ const PostInfo = ({
     versionSpecified?: boolean;
 }) => {
     const postAuthor = window.user?.id == post.userObject.id;
-    const realmController = post.realm && getRealmsData(post.realm)[1];
+    const realmController =
+        window.user && post.realm && window.user.controlled_realms.includes(post.realm);
     const { token_symbol, token_decimals } = window.backendCache.config;
     return (
         <>
