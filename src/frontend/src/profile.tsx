@@ -463,16 +463,17 @@ export const UserInfo = ({ profile }: { profile: User }) => {
                     <hr />
                 </>
             )}
-            {profile.controlled_realms && profile.controlled_realms.length > 0 && (
-                <>
-                    <h2>Controls realms</h2>
-                    <RealmList
-                        classNameArg="top_spaced"
-                        ids={profile.controlled_realms}
-                    />
-                    <hr />
-                </>
-            )}
+            {profile.controlled_realms &&
+                profile.controlled_realms.length > 0 && (
+                    <>
+                        <h2>Controls realms</h2>
+                        <RealmList
+                            classNameArg="top_spaced"
+                            ids={profile.controlled_realms}
+                        />
+                        <hr />
+                    </>
+                )}
         </div>
     );
 };
