@@ -1,8 +1,8 @@
 use ic_cdk::api::stable::{stable_grow, stable_read, stable_size, stable_write};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{cell::RefCell, collections::BTreeMap, fmt::Display, rc::Rc};
+use std::{cell::RefCell, collections::BTreeMap, fmt::Display, marker::PhantomData, rc::Rc};
 
-use super::post::PostId;
+use super::post::{Post, PostId};
 
 #[derive(Serialize, Deserialize)]
 pub struct Api {
@@ -37,7 +37,7 @@ impl Default for Api {
 #[derive(Default, Serialize, Deserialize)]
 pub struct Memory {
     api: Api,
-    pub posts: ObjectManager<PostId>,
+    pub posts: ObjectManager<PostId, Post>,
     #[serde(skip)]
     api_ref: Rc<RefCell<Api>>,
 }
@@ -320,33 +320,44 @@ impl Allocator {
 }
 
 #[derive(Default, Serialize, Deserialize)]
-pub struct ObjectManager<K: Ord + Eq> {
+pub struct ObjectManager<K: Ord + Eq, T: Serialize + DeserializeOwned> {
     index: BTreeMap<K, (u64, u64)>,
     #[serde(skip)]
     api: Rc<RefCell<Api>>,
+    #[serde(skip)]
+    phantom: PhantomData<T>,
 }
 
-impl<K: Eq + Ord + Clone + Display> ObjectManager<K> {
+impl<K: Eq + Ord + Clone + Copy + Display, T: Serialize + DeserializeOwned> ObjectManager<K, T> {
     pub fn len(&self) -> usize {
         self.index.len()
     }
 
-    pub fn insert<T: Serialize>(&mut self, id: K, value: T) -> Result<(), String> {
+    pub fn insert(&mut self, id: K, value: T) -> Result<(), String> {
         self.index.insert(id, self.api.borrow_mut().write(&value)?);
         Ok(())
     }
 
-    pub fn get<T: DeserializeOwned>(&self, id: &K) -> Option<T> {
+    pub fn get(&self, id: &K) -> Option<T> {
         self.index
             .get(id)
             .map(|(offset, len)| self.api.borrow().read(*offset, *len))
     }
 
-    pub fn remove<T: DeserializeOwned>(&mut self, id: &K) -> Result<T, String> {
+    pub fn remove(&mut self, id: &K) -> Result<T, String> {
         let (offset, len) = self.index.remove(id).ok_or("not found")?;
         let value = self.api.borrow().read(offset, len);
         self.api.borrow_mut().remove(offset, len)?;
         Ok(value)
+    }
+
+    pub fn iter(&self) -> Box<dyn DoubleEndedIterator<Item = (K, T)> + '_> {
+        let api = Rc::clone(&self.api);
+        Box::new(
+            self.index
+                .iter()
+                .map(move |(k, (offset, len))| (*k, api.borrow().read(*offset, *len))),
+        )
     }
 }
 
