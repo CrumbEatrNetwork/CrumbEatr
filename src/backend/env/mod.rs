@@ -659,6 +659,18 @@ impl State {
                 "Realm /{} controller list was changed from {:?} to {:?}",
                 name, &realm.controllers, &controllers
             ));
+            // Sync controlled_realms: remove realm from old controllers
+            for user_id in &realm.controllers {
+                if let Some(controller) = self.users.get_mut(user_id) {
+                    controller.controlled_realms.remove(&name);
+                }
+            }
+            // Sync controlled_realms: add realm to new controllers
+            for user_id in &controllers {
+                if let Some(controller) = self.users.get_mut(user_id) {
+                    controller.controlled_realms.insert(name.clone());
+                }
+            }
         }
         realm.controllers = controllers;
         realm.label_color = label_color;
@@ -733,6 +745,13 @@ impl State {
         realm.cleanup_penalty = CONFIG.max_realm_cleanup_penalty.min(*cleanup_penalty);
         realm.last_update = time();
         realm.created = time();
+
+        // Sync controlled_realms: add realm to all controllers
+        for user_id in &realm.controllers {
+            if let Some(controller) = self.users.get_mut(user_id) {
+                controller.controlled_realms.insert(name.clone());
+            }
+        }
 
         self.realms.insert(name.clone(), realm);
 
@@ -1567,17 +1586,12 @@ impl State {
             } else {
                 user.active_weeks = 0;
             }
-            let inactive = !user.active_within_weeks(now, CONFIG.inactivity_duration_weeks);
-            if inactive {
-                user.notifications.clear();
-                user.accounting.clear();
+
+            // Only deactivate after long-term inactivity (CONFIG.inactivity_duration_weeks)
+            if !user.active_within_weeks(now, CONFIG.inactivity_duration_weeks) {
+                user.deactivate();
             }
-            if inactive && user.rewards() > 0 {
-                user.change_rewards(
-                    -(CONFIG.inactivity_penalty as i64).min(user.rewards()),
-                    "inactivity_penalty".to_string(),
-                );
-            }
+
             user.post_reports
                 .retain(|_, timestamp| *timestamp + CONFIG.user_report_validity_days * DAY >= now);
         }
@@ -1587,30 +1601,44 @@ impl State {
     fn charge_for_inactivity(&mut self, now: u64) {
         let mut inactive_users = 0;
         let mut credits_total = 0;
+        // Don't charge below this credit balance
         let inactive_user_balance_threshold = CONFIG.inactivity_penalty * 4;
+
+        // Process ALL inactive users (not just those above threshold)
         for (id, credits) in self
             .users
             .values()
-            .filter(|user| {
-                !user.active_within_weeks(now, CONFIG.inactivity_duration_weeks)
-                    && user.credits() > inactive_user_balance_threshold
-            })
+            .filter(|user| !user.active_within_weeks(now, CONFIG.inactivity_duration_weeks))
             .map(|u| (u.id, u.credits()))
             .collect::<Vec<_>>()
         {
+            inactive_users += 1;
+
+            // Use saturating_sub to prevent underflow
             let costs = CONFIG
                 .inactivity_penalty
-                .min(credits - inactive_user_balance_threshold);
-            if let Err(err) = self.charge(id, costs, "inactivity penalty".to_string()) {
-                self.logger
-                    .warn(format!("Couldn't charge inactivity penalty: {:?}", err));
-            } else {
-                credits_total += costs;
-                inactive_users += 1;
+                .min(credits.saturating_sub(inactive_user_balance_threshold));
+
+            // Only charge if costs > 0
+            if costs > 0 {
+                if let Err(err) = self.charge(id, costs, "inactivity penalty".to_string()) {
+                    self.logger
+                        .warn(format!("Couldn't charge inactivity penalty: {:?}", err));
+                } else {
+                    credits_total += costs;
+                }
             }
+
+            // Also reduce rewards for ALL inactive users
+            let user = self.users.get_mut(&id).expect("no user found");
+            user.change_rewards(
+                -(CONFIG.inactivity_penalty as i64).min(user.rewards()),
+                "inactivity_penalty".to_string(),
+            );
         }
+
         self.logger.info(format!(
-            "Charged `{}` inactive users with `{}` credits.",
+            "Charged {} inactive users a total of {} credits.",
             inactive_users, credits_total
         ));
     }
@@ -2434,7 +2462,7 @@ impl State {
                     "no downvotes for users with pending reports or negative reward balance".into(),
                 );
             }
-            if user.balance < token::base() {
+            if user.total_balance() < token::base() {
                 return Err("no downvotes for users with low token balance".into());
             }
             if self
