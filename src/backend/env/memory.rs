@@ -125,6 +125,35 @@ impl Memory {
         self.api_ref = Rc::new(RefCell::new(test_api));
         self.posts.api = Rc::clone(&self.api_ref);
     }
+
+    #[cfg(test)]
+    pub fn init_test_api(&mut self) {
+        static mut MEM: Vec<u8> = Vec::new();
+        let mem_grow = |n| unsafe {
+            MEM.resize(MEM.len() + n as usize, 0);
+            Ok(0)
+        };
+        let mem_end = || unsafe { MEM.len() as u64 };
+        let write_bytes = |offset, bytes: &[u8]| unsafe {
+            // Defensive resize: ensure Vec is large enough before writing
+            // This makes the test memory behave like IC stable memory
+            let required_size = offset as usize + bytes.len();
+            if MEM.len() < required_size {
+                MEM.resize(required_size, 0);
+            }
+            MEM[offset as usize..offset as usize + bytes.len()].copy_from_slice(bytes);
+        };
+        let read_bytes = |offset, bytes: &mut [u8]| unsafe {
+            bytes.copy_from_slice(&MEM[offset as usize..offset as usize + bytes.len()]);
+        };
+
+        self.set_test_api(
+            Box::new(mem_grow),
+            Box::new(mem_end),
+            Box::new(write_bytes),
+            Box::new(read_bytes),
+        );
+    }
 }
 
 pub fn heap_to_stable(state: &mut super::State) {
@@ -334,6 +363,9 @@ impl<K: Eq + Ord + Clone + Copy + Display, T: Serialize + DeserializeOwned> Obje
     }
 
     pub fn insert(&mut self, id: K, value: T) -> Result<(), String> {
+        if self.index.contains_key(&id) {
+            self.remove(&id)?;
+        }
         self.index.insert(id, self.api.borrow_mut().write(&value)?);
         Ok(())
     }
@@ -572,5 +604,37 @@ pub(crate) mod tests {
         assert_eq!(a.seg(64), 4);
 
         assert!(a.boundary <= mem_end());
+    }
+
+    #[test]
+    fn test_memory_leak_on_insert() {
+        let mut memory = Memory::default();
+        memory.init_test_api();
+
+        // Insert 3 posts initially
+        memory.posts.insert(0, Post::default()).unwrap();
+        memory.posts.insert(1, Post::default()).unwrap();
+        memory.posts.insert(2, Post::default()).unwrap();
+
+        // At this point: 0 free segments (all memory allocated)
+
+        // Overwrite post 1 with a much larger value
+        // This forces new allocation (won't fit in old slot)
+        let mut large_post = Post::default();
+        large_post.body =
+            "overwrite post 1 with a much larger value so that it does not fit into the free slot"
+                .into();
+
+        memory.posts.insert(1, large_post).unwrap();
+
+        // CRITICAL ASSERTION:
+        // After overwriting, old post 1 memory should be freed
+        // Result: exactly 1 free segment (the old post 1 slot)
+        let free_segments = memory.api_ref.as_ref().borrow().allocator.segments.len();
+        assert_eq!(
+            free_segments, 1,
+            "Expected 1 free segment after overwrite, got {}. Memory leak detected!",
+            free_segments
+        );
     }
 }
