@@ -215,6 +215,13 @@ impl Post {
         }) {
             return Err("invalid blobs".into());
         }
+
+        // Validate mention count (max 100 per post)
+        let mention_count = user_handles(CONFIG.max_tag_length, &self.body).len();
+        if mention_count > 100 {
+            return Err("Too many mentions (max 100 per post)".into());
+        }
+
         Ok(())
     }
 
@@ -295,6 +302,7 @@ impl Post {
             } else {
                 0
             }
+            + calculate_mention_costs(state, &self.body, self.user)
     }
 
     pub fn make_hot(&mut self, user_id: UserId, user_balance: Token) {
@@ -791,10 +799,31 @@ fn notify_about(state: &mut State, post: &Post) {
     user_handles(CONFIG.max_tag_length, &post.body)
         .into_iter()
         .filter_map(|handle| state.user(&handle).map(|user| user.id))
-        .filter(|id| !notified.contains(id))
+        .filter(|id| !notified.contains(id) && *id != post.user)  // Add self-mention filter
         .collect::<Vec<_>>()
         .into_iter()
         .for_each(|mentioned_user_id| {
+            // Extract mention_cost while immutable borrow is active, then drop borrow
+            let mention_cost = state
+                .users
+                .get(&mentioned_user_id)
+                .expect("no user found")
+                .mention_cost;
+
+            // Now borrow is dropped, safe to call mutable functions
+            // Distribute 50% of mention cost as rewards
+            if mention_cost > 0 {
+                // Calculate burned and reward amounts (avoid losing 1 credit on odd amounts)
+                let burned_amount = mention_cost / 2;
+                let reward_amount = mention_cost - burned_amount;
+                state.spend_to_user_rewards(
+                    mentioned_user_id,
+                    reward_amount,
+                    format!("mention reward from post [{0}](#/post/{0})", post.id),
+                );
+            }
+
+            // Send notification if user accepts (get mutable reference)
             let user = state
                 .users
                 .get_mut(&mentioned_user_id)
@@ -843,6 +872,18 @@ fn tags(max_tag_length: usize, input: &str) -> BTreeSet<String> {
 // Extracts user names from a string.
 fn user_handles(max_tag_length: usize, input: &str) -> BTreeSet<String> {
     tokens(max_tag_length, input, &['@'])
+}
+
+/// Calculate total mention costs for a post or comment.
+/// Excludes self-mentions and uses BTreeSet deduplication.
+/// Note: Mention count validation happens in Post::valid()
+fn calculate_mention_costs(state: &State, body: &str, author_id: UserId) -> Credits {
+    user_handles(CONFIG.max_tag_length, body)
+        .into_iter()
+        .filter_map(|handle| state.user(&handle))
+        .filter(|user| user.id != author_id)  // Don't charge for self-mentions
+        .map(|user| user.mention_cost)
+        .sum()
 }
 
 fn tokens(max_tag_length: usize, input: &str, tokens: &[char]) -> BTreeSet<String> {

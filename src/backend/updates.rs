@@ -244,6 +244,17 @@ fn update_user_settings() {
     reply(User::update_settings(caller(), settings))
 }
 
+#[export_name = "canister_update update_mention_cost"]
+fn update_mention_cost() {
+    let mention_cost: Credits = parse(&arg_data_raw());
+    reply(mutate(|state| {
+        let user = state
+            .principal_to_user_mut(caller())
+            .ok_or("no user found")?;
+        user.set_mention_cost(mention_cost)
+    }))
+}
+
 #[export_name = "canister_update create_user"]
 fn create_user() {
     let (name, invite): (String, Option<String>) = parse(&arg_data_raw());

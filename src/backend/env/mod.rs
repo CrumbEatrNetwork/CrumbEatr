@@ -426,7 +426,7 @@ impl State {
         self.active_voters(time).map(|(_, balance)| balance).sum()
     }
 
-    fn spend_to_user_rewards<T: ToString>(&mut self, user_id: UserId, amount: Credits, log: T) {
+    pub fn spend_to_user_rewards<T: ToString>(&mut self, user_id: UserId, amount: Credits, log: T) {
         let user = self.users.get_mut(&user_id).expect("no user found");
         user.change_rewards(amount as i64, log);
         self.burned_cycles = self.burned_cycles.saturating_sub(amount as i64);

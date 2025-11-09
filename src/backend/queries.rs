@@ -573,6 +573,27 @@ fn stable_mem_read(page: u64) -> Vec<(u64, Blob)> {
     vec![(page, ByteBuf::from(buf))]
 }
 
+#[export_name = "canister_query mention_costs"]
+fn mention_costs() {
+    let handles: Vec<String> = parse(&arg_data_raw());
+
+    // Prevent DoS: limit input size
+    if handles.len() > 100 {
+        reply(0 as Credits);
+        return;
+    }
+
+    reply(read(|state| {
+        let caller_id = state.principal_to_user(caller()).map(|u| u.id);
+        handles
+            .into_iter()
+            .filter_map(|handle| state.user(&handle))
+            .filter(|user| Some(user.id) != caller_id)  // Exclude self-mentions
+            .map(|user| user.mention_cost)
+            .sum::<Credits>()
+    }))
+}
+
 fn resolve_handle<'a>(state: &'a State, handle: Option<&'a String>) -> Option<&'a User> {
     match handle {
         Some(handle) => state.user(handle),

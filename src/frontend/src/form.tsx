@@ -606,6 +606,8 @@ const insertNewPicture = (
 let timer: any = null;
 let tagCache: any[] = [];
 let tagCosts: number = 0;
+let mentionCache: any[] = [];
+let mentionCosts: number = 0;
 
 const costs = async (value: string, poll: boolean) => {
     const tags = getTokens("#$", value);
@@ -613,9 +615,23 @@ const costs = async (value: string, poll: boolean) => {
         tagCosts = (await window.api.query("tags_cost", tags)) || 0;
         tagCache = tags;
     }
+
+    // Extract user mentions (handles after @)
+    const mentions = Array.from(value.matchAll(/@([\w-]+)/g), (m) => m[1]);
+    if (mentions.toString() != mentionCache.toString()) {
+        mentionCosts = (await window.api.query("mention_costs", mentions)) || 0;
+        mentionCache = mentions;
+    }
+
     const images = (value.match(/\(\/blob\/.+\)/g) || []).length;
     const { post_cost, blob_cost, poll_cost } = window.backendCache.config;
-    return post_cost + tagCosts + images * blob_cost + (poll ? poll_cost : 0);
+    return (
+        post_cost +
+        tagCosts +
+        images * blob_cost +
+        (poll ? poll_cost : 0) +
+        mentionCosts
+    );
 };
 
 export const loadFile = (file: any): Promise<ArrayBuffer> => {

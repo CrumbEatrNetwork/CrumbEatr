@@ -24,6 +24,7 @@ export const Settings = ({ invite }: { invite?: string }) => {
         num_followers: 0,
         downvotes: 0,
     });
+    const [mentionCost, setMentionCost] = React.useState(0);
 
     const updateData = (user: User) => {
         if (!user) return;
@@ -33,6 +34,7 @@ export const Settings = ({ invite }: { invite?: string }) => {
         setGovernance(user.governance.toString());
         setShowPostsInRealms(user.show_posts_in_realms.toString());
         setUserFilter(user.filters.noise);
+        setMentionCost(user.mention_cost || 0);
     };
 
     React.useEffect(() => updateData(user), [user]);
@@ -98,6 +100,7 @@ export const Settings = ({ invite }: { invite?: string }) => {
                 showPostsInRealms == "true",
             ),
             window.api.call<any>("update_user_settings", settings),
+            window.api.call<any>("update_mention_cost", mentionCost),
         ]);
         for (let i in responses) {
             const response = responses[i];
@@ -345,6 +348,41 @@ export const Settings = ({ invite }: { invite?: string }) => {
                             <option value="true">YES</option>
                             <option value="false">NO</option>
                         </select>
+                        <div className="bottom_half_spaced">
+                            Mention Charging
+                        </div>
+                        <div className="stands_out bottom_half_spaced">
+                            <p>
+                                Charge other users when they mention you in posts.
+                                50% of the charge is burned, 50% goes to your
+                                rewards. Requires at least 100{" "}
+                                {window.backendCache.config.token_symbol} balance
+                                to enable.
+                            </p>
+                        </div>
+                        <select
+                            value={mentionCost}
+                            className="bottom_spaced"
+                            onChange={(event) =>
+                                setMentionCost(Number(event.target.value))
+                            }
+                            disabled={user.balance < 10000}
+                        >
+                            <option value="0">Disabled</option>
+                            <option value="40">Low (40 credits)</option>
+                            <option value="60">Medium (60 credits)</option>
+                            <option value="120">High (120 credits)</option>
+                        </select>
+                        {user.balance < 10000 && (
+                            <div
+                                className="bottom_spaced"
+                                style={{ color: "var(--accent)" }}
+                            >
+                                You need at least 100{" "}
+                                {window.backendCache.config.token_symbol} to
+                                enable mention charging
+                            </div>
+                        )}
                     </>
                 )}
                 <ButtonWithLoading

@@ -111,6 +111,8 @@ pub struct User {
     pub posts: Vec<PostId>,
     #[serde(default)]
     pub controlled_realms: HashSet<String>,
+    #[serde(default)]
+    pub mention_cost: Credits,
 }
 
 impl User {
@@ -183,6 +185,7 @@ impl User {
             downvotes: Default::default(),
             show_posts_in_realms: true,
             controlled_realms: Default::default(),
+            mention_cost: 0,
         }
     }
 
@@ -522,6 +525,35 @@ impl User {
                 Err("no user found".into())
             }
         })
+    }
+
+    /// Validate and set mention cost based on user's token balance.
+    /// Returns error if token balance too low or invalid tier value.
+    pub fn set_mention_cost(&mut self, requested_cost: Credits) -> Result<(), String> {
+        // Minimum token requirement: 100 tokens
+        // Token balance uses 2 decimals, so 100.00 tokens = 10000
+        const MIN_TOKEN_BALANCE: Token = 10000;
+
+        // If enabling (cost > 0), check token balance
+        if requested_cost > 0 && self.total_balance() < MIN_TOKEN_BALANCE {
+            return Err(format!(
+                "You need at least {} {} to enable mention charging",
+                MIN_TOKEN_BALANCE / token::base(),
+                CONFIG.token_symbol
+            ));
+        }
+
+        // Validate tier values (only 0, 40, 60, 120 allowed)
+        match requested_cost {
+            0 => {},   // Disabled - always allowed
+            40 => {},  // Low tier
+            60 => {},  // Medium tier
+            120 => {}, // High tier
+            _ => return Err("Invalid mention cost tier. Must be 0, 40, 60, or 120".into()),
+        }
+
+        self.mention_cost = requested_cost;
+        Ok(())
     }
 
     pub fn mintable_tokens(

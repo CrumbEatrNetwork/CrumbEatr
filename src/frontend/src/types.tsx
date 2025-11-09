@@ -218,6 +218,7 @@ export type User = {
     filters: Filters;
     blacklist: UserId[];
     notifications: { [key: number]: [Notification, boolean] };
+    mention_cost: number;
 };
 
 export type Report = {
