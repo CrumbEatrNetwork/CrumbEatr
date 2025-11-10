@@ -8,7 +8,57 @@ All modifications listed below have been made under the terms of GPL v3.0, prese
 
 ---
 
+## November 2025: Mention Charging and Platform Stability
+
+### November 8, 2025
+
+- **Mention Charging System**: Implemented tiered mention charging allowing users to set costs for being mentioned (Off/Low/Medium/High tiers). System includes token balance requirements and automatic exclusion of self-mentions and duplicates.
+
+### November 5, 2025
+
+- **Memory Management Fixes**: Resolved critical memory leaks in ObjectManager and prevented usage of uninitialized instances. Refactored ObjectManager to be generic over value types for improved type safety.
+
+### November 3-4, 2025
+
+- **Platform Improvements**: Enhanced downvoter eligibility checks, added controlled_realms field for O(1) realm controller lookups, refactored post-upgrade infrastructure, and implemented comprehensive security headers.
+- **Code Cleanup**: Removed unused migration functions and updated team allocation mechanisms. Reverted hourly chores to proper 1-hour intervals.
+
+## October 2025: Token Standards and Exchange Integration
+
+### October 29-30, 2025
+
+- **Kong DEX Integration**: Added full compatibility with Kong DEX for CRUM/SCRUM token trading pairs. Implemented optimized archiving system for high-scale deployments.
+- **ICRC-2 Security**: Implemented additional security features for token operations and resolved transaction handling edge cases.
+- **Transaction Handling**: Enhanced transaction filtering in UI and fixed token statistics display issues.
+
+### October 27-28, 2025
+
+- **Economic Adjustments**: Modified downvote mechanics and adjusted penalty structures for improved community moderation.
+- **Infrastructure Updates**: Updated production canister configurations and upgraded dependencies including Node.js version for security improvements.
+
+### October 4-6, 2025
+
+- **UI Improvements**: Fixed realm post count displays and updated black theme to use true black backgrounds for OLED displays.
+
+## September 2025: ICRC Standards Implementation
+
+### September 24-28, 2025
+
+- **Credit Economy**: Disabled auto-topup feature to maintain credit scarcity and economic balance.
+- **UI Fixes**: Fixed carousel navigation issues when clicking thumbnails and updated whitepaper formatting.
+
+### September 2-5, 2025
+
+- **ICRC Standards Suite**: Implemented complete ICRC-2 (approve/transfer_from), ICRC-3 (transaction history), and ICRC-21 (consent messages) standards for full token compatibility.
+- **KongSwap Compatibility**: Added method aliases and fixed transaction formats for DEX integration.
+- **Build Optimizations**: Optimized PocketIC download scripts to reduce build times.
+
 ## August 2025: UI/UX Refinements and Content Updates
+
+### August 29-30, 2025
+
+- **PWA Updates**: Updated Progressive Web App assets to use icp0.io domain and fixed social media card displays for invite links.
+- **Visual Updates**: Replaced rocket emoji with UFO emoji in reactions for consistent branding.
 
 ### August 25-26, 2025
 

@@ -588,7 +588,7 @@ fn mention_costs() {
         handles
             .into_iter()
             .filter_map(|handle| state.user(&handle))
-            .filter(|user| Some(user.id) != caller_id)  // Exclude self-mentions
+            .filter(|user| Some(user.id) != caller_id) // Exclude self-mentions
             .map(|user| user.mention_cost)
             .sum::<Credits>()
     }))

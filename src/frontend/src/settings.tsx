@@ -353,11 +353,11 @@ export const Settings = ({ invite }: { invite?: string }) => {
                         </div>
                         <div className="stands_out bottom_half_spaced">
                             <p>
-                                Charge other users when they mention you in posts.
-                                50% of the charge is burned, 50% goes to your
-                                rewards. Requires at least 100{" "}
-                                {window.backendCache.config.token_symbol} balance
-                                to enable.
+                                Charge other users when they mention you in
+                                posts. 50% of the charge is burned, 50% goes to
+                                your rewards. Requires at least 100{" "}
+                                {window.backendCache.config.token_symbol}{" "}
+                                balance to enable.
                             </p>
                         </div>
                         <select

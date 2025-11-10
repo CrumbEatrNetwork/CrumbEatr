@@ -545,10 +545,10 @@ impl User {
 
         // Validate tier values (only 0, 40, 60, 120 allowed)
         match requested_cost {
-            0 => {},   // Disabled - always allowed
-            40 => {},  // Low tier
-            60 => {},  // Medium tier
-            120 => {}, // High tier
+            0 => {}   // Disabled - always allowed
+            40 => {}  // Low tier
+            60 => {}  // Medium tier
+            120 => {} // High tier
             _ => return Err("Invalid mention cost tier. Must be 0, 40, 60, or 120".into()),
         }
 

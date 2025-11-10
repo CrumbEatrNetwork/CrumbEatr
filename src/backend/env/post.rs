@@ -799,7 +799,7 @@ fn notify_about(state: &mut State, post: &Post) {
     user_handles(CONFIG.max_tag_length, &post.body)
         .into_iter()
         .filter_map(|handle| state.user(&handle).map(|user| user.id))
-        .filter(|id| !notified.contains(id) && *id != post.user)  // Add self-mention filter
+        .filter(|id| !notified.contains(id) && *id != post.user) // Add self-mention filter
         .collect::<Vec<_>>()
         .into_iter()
         .for_each(|mentioned_user_id| {
@@ -881,7 +881,7 @@ fn calculate_mention_costs(state: &State, body: &str, author_id: UserId) -> Cred
     user_handles(CONFIG.max_tag_length, body)
         .into_iter()
         .filter_map(|handle| state.user(&handle))
-        .filter(|user| user.id != author_id)  // Don't charge for self-mentions
+        .filter(|user| user.id != author_id) // Don't charge for self-mentions
         .map(|user| user.mention_cost)
         .sum()
 }

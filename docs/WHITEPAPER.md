@@ -27,14 +27,15 @@ Below is a breakdown of costs.
 | Reacting with ⭐️, ♾️        |               `23` | Gives `20` reward points, burns the rest as a fee.                                                         |
 | Reacting with 👎             |               `15` | Burns `15` credits of the downvoter. Reduces the post's heat score, affecting its visibility in feeds.     |
 | New realm creation           |      `$realm_cost` | Burns `$realm_cost` credits                                                                                |
+| User mentions                |           Variable | Mentioning a user (@username) costs the author based on the mentioned user's tier settings (0/40/60/120)   |
 
 Notes:
 
 1. Each response to a post increases the author's rewards by `$response_reward`.
 2. Inactive users' credits decrease by `$inactivity_penalty` per week after `$inactivity_duration_weeks` weeks of inactivity.
 3. Users with negative reward balances don't participate in reward distributions or minting.
-4. To curb the inorganic behaviour, $name automatically charges excess fees for all posts above `$max_posts_per_day`  per rolling 24h interval and for all comments above  `$max_comments_per_hour` per hour.
-The fee is computed by multiplying `$excess_penalty` with the number of excessive items. If the excessive items contain images, the computed excess fee is additionally charged per image.
+4. To curb the inorganic behaviour, $name automatically charges excess fees for all posts above `$max_posts_per_day`  per rolling 24h interval and for all comments above  `$max_comments_per_hour` per hour. The fee is computed by multiplying `$excess_penalty` with the number of excessive items. If the excessive items contain images, the computed excess fee is additionally charged per image.
+5. User mentions (@username) allow users to set charging tiers (Off: 0, Low: 40, Medium: 60, High: 120 credits). Users must hold at least 100 $token_symbol tokens to enable mention charging. Self-mentions are not charged.
 
 ## Rewards and Revenue Distribution
 
