@@ -113,6 +113,41 @@ pub struct Realm {
     pub adult_content: bool,
 }
 
+impl Realm {
+    /// Validates all Realm fields to prevent unbounded data storage.
+    ///
+    /// # Errors
+    /// Returns an error string if any field exceeds its maximum allowed length:
+    /// - logo: CONFIG.max_realm_logo_len (16KB)
+    /// - label_color: 10 characters
+    /// - description: 2000 characters
+    /// - theme: 400 characters
+    /// - whitelist: 100 users
+    fn validate(&self) -> Result<(), String> {
+        if self.logo.len() > CONFIG.max_realm_logo_len {
+            return Err("logo too big".into());
+        }
+
+        if self.label_color.len() > 10 {
+            return Err("label color invalid".into());
+        }
+
+        if self.description.len() > 2000 {
+            return Err("description too long".into());
+        }
+
+        if self.theme.len() > 400 {
+            return Err("theme invalid".into());
+        }
+
+        if self.whitelist.len() > 100 {
+            return Err("whitelist too long".into());
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Default, Serialize, Deserialize)]
 pub struct Summary {
     pub title: String,
@@ -627,6 +662,9 @@ impl State {
         name: String,
         realm: Realm,
     ) -> Result<(), String> {
+        // Validate realm fields first
+        realm.validate()?;
+
         let Realm {
             logo,
             label_color,
@@ -699,6 +737,9 @@ impl State {
         name: String,
         mut realm: Realm,
     ) -> Result<(), String> {
+        // Validate realm fields first
+        realm.validate()?;
+
         let Realm {
             controllers,
             cleanup_penalty,
@@ -2331,6 +2372,11 @@ impl State {
         post_id: PostId,
         versions: Vec<String>,
     ) -> Result<(), String> {
+        // Validate version hash lengths (max 16 characters each)
+        if versions.iter().any(|v| v.len() > 16) {
+            return Err("wrong hashes".into());
+        }
+
         let post = Post::get(self, &post_id).ok_or("no post found")?.clone();
         if self.principal_to_user(principal).map(|user| user.id) != Some(post.user) {
             return Err("not authorized".into());

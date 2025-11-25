@@ -299,6 +299,11 @@ impl User {
     }
 
     pub fn toggle_following_feed(&mut self, tags: Vec<String>) -> bool {
+        // Validate tag lengths (max 50 characters per tag)
+        if tags.iter().any(|t| t.len() > 50) {
+            return false;
+        }
+
         let tags = tags.into_iter().map(|tag| tag.to_lowercase()).collect();
         if let Some(i) = covered_by_feeds(&self.feeds, &tags, true) {
             self.feeds.remove(i);

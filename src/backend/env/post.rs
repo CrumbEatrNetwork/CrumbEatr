@@ -210,6 +210,23 @@ impl Post {
         if self.body.is_empty() || self.body.chars().count() > CONFIG.max_post_length {
             return Err("invalid post content".into());
         }
+
+        // Validate edit patches - each patch must not exceed max post length
+        if self
+            .patches
+            .iter()
+            .any(|(_, p)| p.len() > CONFIG.max_post_length)
+        {
+            return Err("invalid edit patch".into());
+        }
+
+        // Validate poll options total length (max 300 characters combined)
+        if let Some(Extension::Poll(poll)) = self.extension.as_ref() {
+            if poll.options.iter().map(|o| o.len()).sum::<usize>() > 300 {
+                return Err("poll too long".into());
+            }
+        }
+
         if !blobs.iter().all(|(key, blob)| {
             key.len() <= 8 && blob.len() > 0 && blob.len() <= CONFIG.max_blob_size_bytes
         }) {

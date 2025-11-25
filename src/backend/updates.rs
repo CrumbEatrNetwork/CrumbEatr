@@ -445,6 +445,16 @@ async fn add_post(
 #[update]
 /// This method initiates an asynchronous post creation.
 fn add_post_data(body: String, realm: Option<RealmId>, extension: Option<Blob>) {
+    // Validate sizes before storing draft
+    let realm_len = realm.as_ref().map(|id| id.len()).unwrap_or_default();
+    let blob_len = extension
+        .as_ref()
+        .map(|blob| blob.len())
+        .unwrap_or_default();
+    if blob_len > CONFIG.max_blob_size_bytes || realm_len > CONFIG.max_realm_name {
+        return;
+    }
+
     mutate(|state| {
         if let Some(user) = state.principal_to_user_mut(caller()) {
             user.draft = Some(Draft {
@@ -460,6 +470,11 @@ fn add_post_data(body: String, realm: Option<RealmId>, extension: Option<Blob>) 
 #[update]
 /// This method adds a blob to a post being created
 fn add_post_blob(id: String, blob: Blob) -> Result<(), String> {
+    // Validate blob: must not be empty and must not exceed max size
+    if blob.is_empty() || blob.len() > CONFIG.max_blob_size_bytes {
+        return Err("blob too big".into());
+    }
+
     mutate(|state| {
         if let Some(user) = state.principal_to_user_mut(caller()) {
             let credits = user.credits();
