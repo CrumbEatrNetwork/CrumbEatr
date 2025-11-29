@@ -179,8 +179,8 @@ pub const CONFIG: &Config = &Config {
 
     min_treasury_balance_xdrs: 38, // ~$50
 
-    individual_minting_threshold_percentage: 1,
-    minting_threshold_percentage: 5,
+    individual_minting_threshold_percentage: 2,
+    minting_threshold_percentage: 50,
 
     active_user_share_for_minting_promille: 10,
 
