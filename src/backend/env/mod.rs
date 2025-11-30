@@ -2372,9 +2372,8 @@ impl State {
         post_id: PostId,
         versions: Vec<String>,
     ) -> Result<(), String> {
-        // Validate version hash lengths (max 16 characters each)
-        if versions.iter().any(|v| v.len() > 16) {
-            return Err("wrong hashes".into());
+        if versions.iter().any(|v| v.len() > CONFIG.max_post_length) {
+            return Err("wrong arguments".into());
         }
 
         let post = Post::get(self, &post_id).ok_or("no post found")?.clone();

@@ -606,6 +606,10 @@ fn toggle_blacklist() {
     mutate(|state| {
         let user_id: UserId = parse(&arg_data_raw());
         if let Some(user) = state.principal_to_user_mut(caller()) {
+            // Prevent self-blocking
+            if user_id == user.id {
+                return;
+            }
             user.toggle_blacklist(user_id);
         }
     });

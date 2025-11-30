@@ -495,7 +495,20 @@ impl Post {
                     ));
                 }
             }
-        } else if let Some(discussion_owner) = parent.and_then(|post_id| {
+        }
+
+        // Check if the direct parent comment's author has blocked the commenter
+        if let Some(parent_id) = parent {
+            if let Some(parent_post) = Post::get(state, &parent_id) {
+                if let Some(parent_author) = state.users.get(&parent_post.user) {
+                    if parent_author.blacklist.contains(&user.id) {
+                        return Err("you cannot reply to users who blocked you".into());
+                    }
+                }
+            }
+        }
+
+        if let Some(discussion_owner) = parent.and_then(|post_id| {
             state.thread(post_id).next().and_then(|post_id| {
                 Post::get(state, &post_id).and_then(|post| state.users.get(&post.user))
             })
