@@ -279,9 +279,12 @@ fn all_realms() {
 fn user_posts() {
     let (handle, page, offset): (String, usize, PostId) = parse(&arg_data_raw());
     read(|state| {
-        resolve_handle(state, Some(&handle)).map(|user| {
+        let caller_user = state.principal_to_user(caller());
+        resolve_handle(state, Some(&handle)).map(|target_user| {
             reply(
-                user.posts(state, offset, true)
+                target_user
+                    .posts(state, offset, true)
+                    .filter(|post| blacklist_filter(caller_user, post))
                     .skip(CONFIG.feed_page_size * page)
                     .take(CONFIG.feed_page_size)
                     .collect::<Vec<_>>(),
@@ -294,10 +297,13 @@ fn user_posts() {
 fn rewarded_posts() {
     let (handle, page, offset): (String, usize, PostId) = parse(&arg_data_raw());
     read(|state| {
-        resolve_handle(state, Some(&handle)).map(|user| {
+        let caller_user = state.principal_to_user(caller());
+        resolve_handle(state, Some(&handle)).map(|target_user| {
             reply(
-                user.posts(state, offset, true)
+                target_user
+                    .posts(state, offset, true)
                     .filter(|post| !post.reactions.is_empty())
+                    .filter(|post| blacklist_filter(caller_user, post))
                     .skip(CONFIG.feed_page_size * page)
                     .take(CONFIG.feed_page_size)
                     .collect::<Vec<_>>(),
@@ -311,10 +317,12 @@ fn user_tags() {
     let (handle, page, offset): (String, usize, PostId) = parse(&arg_data_raw());
     let tag = format!("@{}", handle);
     read(|state| {
+        let user = state.principal_to_user(caller());
         reply(
             state
                 .last_posts(None, offset, 0, true)
                 .filter(|post| post.body.contains(&tag))
+                .filter(|post| blacklist_filter(user, post))
                 .skip(CONFIG.feed_page_size * page)
                 .take(CONFIG.feed_page_size)
                 .collect::<Vec<_>>(),
@@ -360,9 +368,11 @@ fn invites() {
 fn posts() {
     let ids: Vec<PostId> = parse(&arg_data_raw());
     read(|state| {
+        let user = state.principal_to_user(caller());
         reply(
             ids.into_iter()
                 .filter_map(|id| Post::get(state, &id))
+                .filter(|post| blacklist_filter(user, post))
                 .collect::<Vec<&Post>>(),
         );
     })
@@ -372,12 +382,15 @@ fn posts() {
 fn journal() {
     let (handle, page, offset): (String, usize, PostId) = parse(&arg_data_raw());
     read(|state| {
+        let caller_user = state.principal_to_user(caller());
         reply(
             state
                 .user(&handle)
-                .map(|user| {
-                    user.posts(state, offset, false)
+                .map(|target_user| {
+                    target_user
+                        .posts(state, offset, false)
                         .filter(|post| !post.is_deleted() && !post.body.starts_with('@'))
+                        .filter(|post| blacklist_filter(caller_user, post))
                         .skip(page * CONFIG.feed_page_size)
                         .take(CONFIG.feed_page_size)
                         .collect::<Vec<_>>()
@@ -391,6 +404,7 @@ fn journal() {
 fn hot_realm_posts() {
     let (realm, page, offset): (String, usize, PostId) = parse(&arg_data_raw());
     read(|state| {
+        let user = state.principal_to_user(caller());
         reply(
             state
                 .hot_posts(
@@ -399,6 +413,7 @@ fn hot_realm_posts() {
                     offset,
                     Some(&|post: &Post| post.realm.is_some()),
                 )
+                .filter(|post| personal_filter(state, user, post))
                 .collect::<Vec<_>>(),
         )
     });
@@ -414,6 +429,13 @@ fn personal_filter(state: &State, user: Option<&User>, post: &Post) -> bool {
                 .unwrap_or(true)
     })
     .unwrap_or(true)
+}
+
+/// Simple blacklist-only filter for queries where full personal_filter is too restrictive.
+/// Takes user as parameter to avoid repeated caller() lookups per post.
+fn blacklist_filter(user: Option<&User>, post: &Post) -> bool {
+    user.map(|u| !u.blacklist.contains(&post.user))
+        .unwrap_or(true)
 }
 
 #[export_name = "canister_query hot_posts"]
@@ -465,9 +487,11 @@ fn posts_by_tags() {
     let (realm, tags, users, page, offset): (String, Vec<String>, Vec<UserId>, usize, PostId) =
         parse(&arg_data_raw());
     read(|state| {
+        let user = state.principal_to_user(caller());
         reply(
             state
                 .posts_by_tags(optional(realm), tags, users, page, offset)
+                .filter(|post| blacklist_filter(user, post))
                 .collect::<Vec<_>>(),
         )
     });
@@ -488,10 +512,12 @@ fn personal_feed() {
 fn thread() {
     let id: PostId = parse(&arg_data_raw());
     read(|state| {
+        let user = state.principal_to_user(caller());
         reply(
             state
                 .thread(id)
                 .filter_map(|id| Post::get(state, &id))
+                .filter(|post| blacklist_filter(user, post))
                 .collect::<Vec<_>>(),
         )
     })
@@ -549,7 +575,20 @@ fn stats() {
 #[export_name = "canister_query search"]
 fn search() {
     let query: String = parse(&arg_data_raw());
-    read(|state| reply(env::search::search(state, query)));
+    read(|state| {
+        let results = env::search::search(state, query);
+        let blacklist = state.principal_to_user(caller()).map(|u| &u.blacklist);
+        reply(
+            results
+                .into_iter()
+                .filter(|r| {
+                    // Only filter post results; let user/realm results through
+                    r.result != "post"
+                        || blacklist.map(|bl| !bl.contains(&r.user_id)).unwrap_or(true)
+                })
+                .collect::<Vec<_>>(),
+        )
+    });
 }
 
 #[export_name = "canister_query realm_search"]
